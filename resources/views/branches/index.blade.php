@@ -2,15 +2,16 @@
     <div class="space-y-6">
         <div class="flex items-start justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold text-slate-900">Branches</h1>
+                <div class="brand-badge bg-brand-primary/10 text-brand-primary">Branch scope</div>
+                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-brand-navy">Branches</h1>
                 <p class="mt-1 text-sm text-slate-600">Visible branches for your current scope.</p>
             </div>
-            <a href="{{ route('closures.index') }}" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            <a href="{{ route('closures.index') }}" class="brand-btn-secondary">
                 Open closures
             </a>
         </div>
 
-        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm">
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
@@ -24,13 +25,15 @@
                 <tbody class="divide-y divide-slate-200 bg-white">
                     @forelse ($branches as $branch)
                         <tr>
-                            <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ $branch->name }}</td>
+                            <td class="px-4 py-3 text-sm font-medium text-brand-navy">{{ $branch->name }}</td>
                             <td class="px-4 py-3 text-sm text-slate-600">{{ $branch->channel_type }}</td>
                             <td class="px-4 py-3 text-sm text-slate-600">{{ $branch->channel_identifier ?? '-' }}</td>
-                            <td class="px-4 py-3 text-sm text-slate-600">{{ $branch->status }}</td>
+                            <td class="px-4 py-3 text-sm text-slate-600">
+                                <span class="brand-badge bg-slate-100 text-slate-700">{{ $branch->status }}</span>
+                            </td>
                             <td class="px-4 py-3 text-sm">
                                 @can('create', [\App\Models\BranchDailyClosure::class, $branch])
-                                    <a href="{{ route('closures.index', ['branch_id' => $branch->id, 'closure_date' => today()->toDateString()]) }}" class="rounded-md border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-50">
+                                    <a href="{{ route('closures.index', ['branch_id' => $branch->id, 'closure_date' => today()->toDateString()]) }}" class="brand-btn-secondary px-3 py-1.5 text-xs">
                                         Close Day
                                     </a>
                                 @else

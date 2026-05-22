@@ -1,59 +1,60 @@
-﻿<x-app-layout>
+<x-app-layout>
     <div class="space-y-6">
         <div class="flex items-start justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold text-slate-900">Closures</h1>
+                <div class="brand-badge bg-brand-primary/10 text-brand-primary">Daily closure</div>
+                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-brand-navy">Closures</h1>
                 <p class="mt-1 text-sm text-slate-600">Daily branch closure snapshots and operational filters.</p>
             </div>
             @if (session('status'))
-                <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+                <div class="rounded-2xl border border-brand-success/20 bg-green-50 px-4 py-3 text-sm text-green-800 shadow-sm">
                     {{ session('status') }}
                 </div>
             @endif
         </div>
 
         @if (! auth()->user()->isViewer())
-            <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="brand-card p-5">
                 <form method="POST" action="{{ route('closures.store') }}" class="grid gap-4 lg:grid-cols-4">
                     @csrf
                     <div>
                         <label for="branch_id" class="block text-sm font-medium text-slate-700">Branch</label>
-                        <select id="branch_id" name="branch_id" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+                        <select id="branch_id" name="branch_id" class="brand-input mt-1 block w-full rounded-xl">
                             <option value="">Select a branch</option>
                             @foreach ($branches as $branch)
                                 <option value="{{ $branch->id }}" @selected(request('branch_id') == $branch->id)>{{ $branch->name }}</option>
                             @endforeach
                         </select>
-                        @error('branch_id')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        @error('branch_id')<p class="mt-2 text-sm text-brand-danger">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="closure_date" class="block text-sm font-medium text-slate-700">Closure date</label>
-                        <input id="closure_date" name="closure_date" type="date" value="{{ request('closure_date', today()->toDateString()) }}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
-                        @error('closure_date')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        <input id="closure_date" name="closure_date" type="date" value="{{ request('closure_date', today()->toDateString()) }}" class="brand-input mt-1 block w-full rounded-xl">
+                        @error('closure_date')<p class="mt-2 text-sm text-brand-danger">{{ $message }}</p>@enderror
                     </div>
                     <div class="lg:col-span-2">
                         <label for="notes" class="block text-sm font-medium text-slate-700">Notes</label>
-                        <input id="notes" name="notes" type="text" value="{{ old('notes') }}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="Optional operational notes">
-                        @error('notes')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        <input id="notes" name="notes" type="text" value="{{ old('notes') }}" class="brand-input mt-1 block w-full rounded-xl" placeholder="Optional operational notes">
+                        @error('notes')<p class="mt-2 text-sm text-brand-danger">{{ $message }}</p>@enderror
                     </div>
                     <div class="lg:col-span-4 flex justify-end">
-                        <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                        <button type="submit" class="brand-btn-primary">
                             Close Day
                         </button>
                     </div>
                 </form>
             </div>
         @else
-            <div class="rounded-lg border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
+            <div class="rounded-2xl border border-slate-200/80 bg-white p-5 text-sm text-slate-600 shadow-sm">
                 Viewer access is read-only. Closure actions are disabled.
             </div>
         @endif
 
-        <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="brand-card p-5">
             <form method="GET" action="{{ route('closures.index') }}" class="grid gap-4 lg:grid-cols-4">
                 <div>
                     <label for="filter_branch_id" class="block text-sm font-medium text-slate-700">Branch</label>
-                    <select id="filter_branch_id" name="branch_id" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+                    <select id="filter_branch_id" name="branch_id" class="brand-input mt-1 block w-full rounded-xl">
                         <option value="">All branches</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->id }}" @selected(request('branch_id') == $branch->id)>{{ $branch->name }}</option>
@@ -62,11 +63,11 @@
                 </div>
                 <div>
                     <label for="filter_closure_date" class="block text-sm font-medium text-slate-700">Date</label>
-                    <input id="filter_closure_date" name="closure_date" type="date" value="{{ request('closure_date') }}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+                    <input id="filter_closure_date" name="closure_date" type="date" value="{{ request('closure_date') }}" class="brand-input mt-1 block w-full rounded-xl">
                 </div>
                 <div>
                     <label for="filter_closed_by" class="block text-sm font-medium text-slate-700">User</label>
-                    <select id="filter_closed_by" name="closed_by" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+                    <select id="filter_closed_by" name="closed_by" class="brand-input mt-1 block w-full rounded-xl">
                         <option value="">All users</option>
                         @foreach ($users as $user)
                             <option value="{{ $user->id }}" @selected(request('closed_by') == $user->id)>{{ $user->name }}</option>
@@ -74,13 +75,13 @@
                     </select>
                 </div>
                 <div class="flex items-end gap-2">
-                    <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">Apply</button>
-                    <a href="{{ route('closures.index') }}" class="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Reset</a>
+                    <button type="submit" class="brand-btn-primary">Apply</button>
+                    <a href="{{ route('closures.index') }}" class="brand-btn-secondary">Reset</a>
                 </div>
             </form>
         </div>
 
-        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm">
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
@@ -105,12 +106,12 @@
                             <td class="px-4 py-3 text-sm text-slate-900">{{ $closure->total_confirmed }}</td>
                             <td class="px-4 py-3 text-sm text-slate-900">{{ $closure->total_rejected }}</td>
                             <td class="px-4 py-3 text-sm text-slate-900">{{ $closure->total_pending }}</td>
-                            <td class="px-4 py-3 text-sm text-slate-900">{{ $closure->total_amount_confirmed }}</td>
+                            <td class="px-4 py-3 text-sm text-slate-900">&#8353;{{ number_format((float) $closure->total_amount_confirmed, 2, '.', ',') }}</td>
                             <td class="px-4 py-3 text-sm">
                                 <div class="flex flex-wrap items-center gap-2">
                                     @can('view', $closure)
-                                        <a href="{{ route('closures.show', $closure) }}" class="rounded-md border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-50">View</a>
-                                        <a href="{{ route('closures.export', $closure) }}" class="rounded-md border border-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-50">Export CSV</a>
+                                        <a href="{{ route('closures.show', $closure) }}" class="brand-btn-secondary px-3 py-1.5 text-xs">View</a>
+                                        <a href="{{ route('closures.export', $closure) }}" class="brand-btn-secondary px-3 py-1.5 text-xs">Export CSV</a>
                                     @endcan
                                 </div>
                             </td>

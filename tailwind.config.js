@@ -12,7 +12,20 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Poppins', 'Inter', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                brand: {
+                    primary: '#0A3D91',
+                    navy: '#081F4D',
+                    gold: '#F5B400',
+                    background: '#F4F7FB',
+                    secondary: '#6B7280',
+                    success: '#22C55E',
+                    warning: '#F59E0B',
+                    danger: '#EF4444',
+                    info: '#3B82F6',
+                },
             },
         },
     },
