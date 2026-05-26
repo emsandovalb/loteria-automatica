@@ -59,7 +59,16 @@
                     <dl class="mt-3 space-y-2 text-sm text-slate-700">
                         <div class="flex justify-between gap-4"><dt>Status</dt><dd>{{ $request->status }}</dd></div>
                         <div class="flex justify-between gap-4"><dt>Branch</dt><dd>{{ $request->branch?->name ?? '-' }}</dd></div>
-                        <div class="flex justify-between gap-4"><dt>Draw</dt><dd>{{ $request->draw?->name ?? '-' }}</dd></div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between gap-4"><dt>Draw</dt><dd>{{ $request->draw?->name ?? '-' }}</dd></div>
+                            @if ($request->draw)
+                                <div class="text-right">
+                                    <span class="brand-badge {{ $request->draw->isOpenForIntake() ? 'bg-green-100 text-green-800' : ($request->draw->closingReason() === 'manually_closed' ? 'bg-amber-100 text-amber-800' : ($request->draw->closingReason() === 'inactive' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-800')) }}">
+                                        {{ $request->draw->intakeStatusLabel() }}
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
                         <div class="flex justify-between gap-4"><dt>Customer</dt><dd>{{ $request->customer?->phone ?? '-' }}</dd></div>
                     </dl>
                 </div>

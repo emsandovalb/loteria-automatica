@@ -42,15 +42,20 @@ class DatabaseSeeder extends Seeder
         });
 
         $draws = collect([
-            ['name' => '12:00 md', 'draw_time' => '12:00:00'],
-            ['name' => '2:00 pm', 'draw_time' => '14:00:00'],
-            ['name' => '5:00 pm', 'draw_time' => '17:00:00'],
-            ['name' => '7:00 pm', 'draw_time' => '19:00:00'],
+            ['name' => '12:00 md', 'draw_time' => '12:00:00', 'close_time' => '11:55:00'],
+            ['name' => '2:00 pm', 'draw_time' => '14:00:00', 'close_time' => '13:55:00'],
+            ['name' => '5:00 pm', 'draw_time' => '17:00:00', 'close_time' => '16:55:00'],
+            ['name' => '7:00 pm', 'draw_time' => '19:00:00', 'close_time' => '18:55:00'],
         ])->map(function (array $drawData) use ($organization) {
             return Draw::create([
                 'organization_id' => $organization->id,
                 'name' => $drawData['name'],
                 'draw_time' => $drawData['draw_time'],
+                'close_time' => $drawData['close_time'],
+                'cutoff_minutes_before' => 5,
+                'timezone' => 'America/Costa_Rica',
+                'closes_at_next_day' => false,
+                'is_accepting_requests' => true,
                 'status' => Draw::STATUS_ACTIVE,
             ]);
         });

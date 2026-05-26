@@ -47,6 +47,85 @@ class NumberLimitService
             ->first();
     }
 
+    /**
+     * @return array{
+     *     limit: ?NumberLimit,
+     *     status: string,
+     *     reason: ?string,
+     *     notes: ?string,
+     *     warning: ?string,
+     *     customer_review_notice: ?string
+     * }
+     */
+    public function requestDecisionForAmount(
+        Organization $organization,
+        Branch $branch,
+        ?Draw $draw,
+        string $number,
+        float $amount,
+    ): array {
+        if ($draw === null) {
+            return $this->emptyDecision();
+        }
+
+        $limit = $this->limitFor($organization, $branch, $draw, $number);
+
+        if ($limit === null) {
+            return $this->emptyDecision();
+        }
+
+        if ($limit->is_blocked || $limit->restriction_type === NumberLimit::RESTRICTION_TYPE_BLOCKED) {
+            $warning = 'Number is blocked for this draw. Manual review required.';
+
+            return [
+                'limit' => $limit,
+                'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+                'reason' => 'blocked',
+                'notes' => $warning,
+                'warning' => $warning,
+                'customer_review_notice' => $warning,
+            ];
+        }
+
+        if ($limit->requires_manual_review) {
+            $warning = 'Number is restricted for this draw. Manual review required.';
+
+            return [
+                'limit' => $limit,
+                'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+                'reason' => 'manual_review',
+                'notes' => $warning,
+                'warning' => $warning,
+                'customer_review_notice' => $warning,
+            ];
+        }
+
+        $activeAmount = $this->currentActiveAmount($organization, $branch, $draw, $number);
+        $projectedAmount = $activeAmount + $amount;
+
+        if ($limit->max_amount <= 0 || $projectedAmount > (float) $limit->max_amount) {
+            $warning = sprintf(
+                'Limit warning: current active amount for %s on %s %s would exceed max %s%s.',
+                $number,
+                $branch->name,
+                $draw->name,
+                "\u{20A1}",
+                $this->formatAmount($limit->max_amount),
+            );
+
+            return [
+                'limit' => $limit,
+                'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+                'reason' => 'over_limit',
+                'notes' => $warning,
+                'warning' => $warning,
+                'customer_review_notice' => null,
+            ];
+        }
+
+        return $this->emptyDecision($limit);
+    }
+
     public function warningForAmount(
         Organization $organization,
         Branch $branch,
@@ -54,36 +133,17 @@ class NumberLimitService
         string $number,
         float $amount,
     ): ?string {
-        if ($draw === null) {
-            return null;
-        }
-
-        $limit = $this->limitFor($organization, $branch, $draw, $number);
-
-        if ($limit === null) {
-            return null;
-        }
-
-        $activeAmount = $this->currentActiveAmount($organization, $branch, $draw, $number);
-        $projectedAmount = $activeAmount + $amount;
-
-        if ($projectedAmount <= (float) $limit->max_amount) {
-            return null;
-        }
-
-        return sprintf(
-            'Limit warning: current active amount for %s on %s %s would exceed max ₡%s.',
-            $number,
-            $branch->name,
-            $draw->name,
-            $this->formatAmount($limit->max_amount),
-        );
+        return $this->requestDecisionForAmount($organization, $branch, $draw, $number, $amount)['warning'];
     }
 
     public function statusFor(?NumberLimit $limit, float $activeAmount): string
     {
         if ($limit === null) {
-            return 'available';
+            return 'no_limit';
+        }
+
+        if ($limit->is_blocked || $limit->restriction_type === NumberLimit::RESTRICTION_TYPE_BLOCKED) {
+            return 'blocked';
         }
 
         $maxAmount = (float) $limit->max_amount;
@@ -106,11 +166,23 @@ class NumberLimitService
             return 'warning';
         }
 
+        if ($limit->requires_manual_review) {
+            return 'manual_review';
+        }
+
+        if ($limit->is_restricted || $limit->restriction_type === NumberLimit::RESTRICTION_TYPE_RESTRICTED) {
+            return 'restricted';
+        }
+
+        if ($limit->restriction_type === NumberLimit::RESTRICTION_TYPE_HOT) {
+            return 'hot';
+        }
+
         return 'available';
     }
 
     /**
-     * @return array{available_amount: float|null, percentage_used: float|null, status: string}
+     * @return array{available_amount: float|null, percentage_used: float|null, status: string, is_restricted: bool, restriction_type: ?string, requires_manual_review: bool, is_blocked: bool}
      */
     public function limitStateFor(?NumberLimit $limit, float $activeAmount): array
     {
@@ -118,7 +190,11 @@ class NumberLimitService
             return [
                 'available_amount' => null,
                 'percentage_used' => null,
-                'status' => 'available',
+                'status' => 'no_limit',
+                'is_restricted' => false,
+                'restriction_type' => null,
+                'requires_manual_review' => false,
+                'is_blocked' => false,
             ];
         }
 
@@ -130,6 +206,32 @@ class NumberLimitService
                 ? round(($activeAmount / $maxAmount) * 100, 1)
                 : null,
             'status' => $this->statusFor($limit, $activeAmount),
+            'is_restricted' => (bool) $limit->is_restricted,
+            'restriction_type' => $limit->restriction_type,
+            'requires_manual_review' => (bool) $limit->requires_manual_review,
+            'is_blocked' => (bool) $limit->is_blocked,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     limit: ?NumberLimit,
+     *     status: string,
+     *     reason: ?string,
+     *     notes: ?string,
+     *     warning: ?string,
+     *     customer_review_notice: ?string
+     * }
+     */
+    private function emptyDecision(?NumberLimit $limit = null): array
+    {
+        return [
+            'limit' => $limit,
+            'status' => IntakeRequest::STATUS_PENDING,
+            'reason' => null,
+            'notes' => null,
+            'warning' => null,
+            'customer_review_notice' => null,
         ];
     }
 

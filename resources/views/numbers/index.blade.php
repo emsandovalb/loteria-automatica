@@ -88,6 +88,13 @@
                                     <option value="{{ $draw->id }}" @selected($selectedDraw?->id === $draw->id)>{{ $draw->name }}</option>
                                 @endforeach
                             </select>
+                            @if ($selectedDraw)
+                                <div class="mt-2">
+                                    <span class="brand-badge {{ $selectedDraw->isOpenForIntake() ? 'bg-green-100 text-green-800' : ($selectedDraw->closingReason() === 'manually_closed' ? 'bg-amber-100 text-amber-800' : ($selectedDraw->closingReason() === 'inactive' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-800')) }}">
+                                        {{ $selectedDraw->intakeStatusLabel() }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="flex items-end">
@@ -106,6 +113,13 @@
                     <div class="rounded-2xl border border-slate-200/80 bg-slate-50 p-4">
                         <div class="text-sm text-slate-500">Selected draw</div>
                         <div class="mt-1 text-base font-semibold text-brand-navy">{{ $selectedDraw?->name ?? 'No draw available' }}</div>
+                        @if ($selectedDraw)
+                            <div class="mt-2">
+                                <span class="brand-badge {{ $selectedDraw->isOpenForIntake() ? 'bg-green-100 text-green-800' : ($selectedDraw->closingReason() === 'manually_closed' ? 'bg-amber-100 text-amber-800' : ($selectedDraw->closingReason() === 'inactive' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-800')) }}">
+                                    {{ $selectedDraw->intakeStatusLabel() }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -146,6 +160,10 @@
                     <span class="brand-badge bg-amber-50 text-amber-700">warning <span class="font-normal text-slate-500">80% to 99%</span></span>
                     <span class="brand-badge bg-blue-50 text-blue-700">full <span class="font-normal text-slate-500">100%</span></span>
                     <span class="brand-badge bg-red-50 text-red-700">over_limit <span class="font-normal text-slate-500">&gt; 100%</span></span>
+                    <span class="brand-badge bg-red-50 text-red-700">blocked <span class="font-normal text-slate-500">manual review</span></span>
+                    <span class="brand-badge bg-amber-50 text-amber-700">restricted <span class="font-normal text-slate-500">visual warning</span></span>
+                    <span class="brand-badge bg-yellow-50 text-yellow-700">hot <span class="font-normal text-slate-500">special flag</span></span>
+                    <span class="brand-badge bg-purple-50 text-purple-700">manual_review <span class="font-normal text-slate-500">manual check</span></span>
                     <span class="brand-badge bg-slate-100 text-slate-700">no_limit <span class="font-normal text-slate-500">no configured limit</span></span>
                 </div>
 
@@ -201,9 +219,13 @@
                         $end = $start + 9;
                         $groupStatuses = collect($group)->pluck('status');
                         $groupTone = match (true) {
+                            $groupStatuses->contains('blocked') => 'blocked',
                             $groupStatuses->contains('over_limit') => 'over_limit',
                             $groupStatuses->contains('full') => 'full',
                             $groupStatuses->contains('warning') => 'warning',
+                            $groupStatuses->contains('restricted') => 'restricted',
+                            $groupStatuses->contains('hot') => 'hot',
+                            $groupStatuses->contains('manual_review') => 'manual_review',
                             default => 'available',
                         };
                     @endphp
@@ -250,19 +272,33 @@
                                 @foreach ($group as $row)
                                     @php
                                         $hasLimit = $row['max_amount'] !== null;
-                                        $statusLabel = $hasLimit ? str_replace('_', ' ', $row['status']) : 'no_limit';
+                                        $statusLabel = $hasLimit ? str_replace('_', ' ', $row['status']) : 'no limit';
                                         $cardClasses = match ($row['status']) {
+                                            'blocked' => 'border-red-200 bg-red-50/80 text-red-700',
                                             'over_limit' => 'border-red-200 bg-red-50/80 text-red-700',
                                             'full' => 'border-blue-200 bg-blue-50/80 text-blue-700',
                                             'warning' => 'border-amber-200 bg-amber-50/80 text-amber-700',
+                                            'restricted' => 'border-amber-200 bg-amber-50/80 text-amber-700',
+                                            'hot' => 'border-yellow-200 bg-yellow-50/80 text-yellow-700',
+                                            'manual_review' => 'border-purple-200 bg-purple-50/80 text-purple-700',
                                             default => $hasLimit ? 'border-brand-success/20 bg-green-50/80 text-green-700' : 'border-slate-200 bg-slate-50 text-slate-600',
                                         };
                                         $badgeClasses = match ($row['status']) {
+                                            'blocked' => 'bg-red-100 text-red-700',
                                             'over_limit' => 'bg-red-100 text-red-700',
                                             'full' => 'bg-blue-100 text-blue-700',
                                             'warning' => 'bg-amber-100 text-amber-700',
+                                            'restricted' => 'bg-amber-100 text-amber-800',
+                                            'hot' => 'bg-yellow-100 text-yellow-800',
+                                            'manual_review' => 'bg-purple-100 text-purple-800',
                                             default => $hasLimit ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600',
                                         };
+                                        $flags = collect([
+                                            $row['is_blocked'] ? ['label' => 'blocked', 'class' => 'bg-red-100 text-red-700'] : null,
+                                            $row['is_restricted'] ? ['label' => 'restricted', 'class' => 'bg-amber-100 text-amber-800'] : null,
+                                            $row['restriction_type'] === \App\Models\NumberLimit::RESTRICTION_TYPE_HOT ? ['label' => 'hot', 'class' => 'bg-yellow-100 text-yellow-800'] : null,
+                                            $row['requires_manual_review'] ? ['label' => 'manual review', 'class' => 'bg-purple-100 text-purple-800'] : null,
+                                        ])->filter()->values();
                                     @endphp
 
                                     <button
@@ -282,6 +318,14 @@
                                                     </div>
                                                 @endif
                                             </div>
+
+                                            @if ($flags->isNotEmpty())
+                                                <div class="flex flex-wrap justify-center gap-1.5">
+                                                    @foreach ($flags as $flag)
+                                                        <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide {{ $flag['class'] }}">{{ $flag['label'] }}</span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
 
                                             <span class="inline-flex w-full items-center justify-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide {{ $badgeClasses }}">
                                                 {{ $statusLabel }}
@@ -331,15 +375,23 @@
                                 @php
                                     $hasLimit = $row['max_amount'] !== null;
                                     $tableRowClasses = match ($row['status']) {
+                                        'blocked' => 'bg-red-50/60',
                                         'over_limit' => 'bg-red-50/60',
                                         'full' => 'bg-blue-50/60',
                                         'warning' => 'bg-amber-50/60',
+                                        'restricted' => 'bg-amber-50/60',
+                                        'hot' => 'bg-yellow-50/60',
+                                        'manual_review' => 'bg-purple-50/60',
                                         default => '',
                                     };
                                     $statusClasses = match ($row['status']) {
+                                        'blocked' => 'border-red-200 bg-red-100 text-red-700',
                                         'over_limit' => 'border-red-200 bg-red-100 text-red-700',
                                         'full' => 'border-blue-200 bg-blue-100 text-blue-700',
                                         'warning' => 'border-amber-200 bg-amber-100 text-amber-700',
+                                        'restricted' => 'border-amber-200 bg-amber-100 text-amber-800',
+                                        'hot' => 'border-yellow-200 bg-yellow-100 text-yellow-800',
+                                        'manual_review' => 'border-purple-200 bg-purple-100 text-purple-800',
                                         default => $hasLimit ? 'border-brand-success/20 bg-green-100 text-green-700' : 'border-slate-200 bg-slate-200 text-slate-600',
                                     };
                                     $statusLabel = $hasLimit ? str_replace('_', ' ', $row['status']) : 'no limit';

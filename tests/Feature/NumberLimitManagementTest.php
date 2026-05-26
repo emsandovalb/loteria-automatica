@@ -26,6 +26,11 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '07',
             'max_amount' => 100,
+            'is_restricted' => '1',
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Needs manual oversight',
+            'requires_manual_review' => '1',
+            'is_blocked' => '0',
         ])->assertRedirect(route('limits.index', [
             'branch_id' => $branchOne->id,
             'draw_id' => $draw->id,
@@ -44,6 +49,11 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '08',
             'max_amount' => 150,
+            'is_restricted' => '1',
+            'restriction_type' => 'blocked',
+            'restriction_reason' => 'Temporarily blocked',
+            'requires_manual_review' => '0',
+            'is_blocked' => '1',
         ])->assertRedirect(route('limits.index', [
             'branch_id' => $branchOne->id,
             'draw_id' => $draw->id,
@@ -56,6 +66,11 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '08',
             'max_amount' => '150.00',
+            'is_restricted' => 1,
+            'restriction_type' => 'blocked',
+            'restriction_reason' => 'Temporarily blocked',
+            'requires_manual_review' => 0,
+            'is_blocked' => 1,
         ]);
 
         $this->actingAs($owner)->delete(route('limits.delete', $limit->fresh()))
@@ -85,6 +100,11 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '11',
             'max_amount' => 120,
+            'is_restricted' => '1',
+            'restriction_type' => 'hot',
+            'restriction_reason' => 'Admin hot number',
+            'requires_manual_review' => '0',
+            'is_blocked' => '0',
         ])->assertRedirect();
 
         $this->assertDatabaseHas('number_limits', [
@@ -93,6 +113,43 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '11',
             'max_amount' => '120.00',
+            'is_restricted' => 1,
+            'restriction_type' => 'hot',
+            'restriction_reason' => 'Admin hot number',
+            'requires_manual_review' => 0,
+            'is_blocked' => 0,
+        ]);
+
+        $limit = NumberLimit::query()
+            ->where('organization_id', $owner->organization_id)
+            ->where('branch_id', $branchOne->id)
+            ->where('draw_id', $draw->id)
+            ->where('number', '11')
+            ->firstOrFail();
+
+        $this->actingAs($admin)->put(route('limits.update', $limit), [
+            'branch_id' => $branchOne->id,
+            'draw_id' => $draw->id,
+            'number' => '12',
+            'max_amount' => 130,
+            'is_restricted' => '1',
+            'restriction_type' => 'blocked',
+            'restriction_reason' => 'Admin blocked number',
+            'requires_manual_review' => '1',
+            'is_blocked' => '1',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('number_limits', [
+            'organization_id' => $owner->organization_id,
+            'branch_id' => $branchOne->id,
+            'draw_id' => $draw->id,
+            'number' => '12',
+            'max_amount' => '130.00',
+            'is_restricted' => 1,
+            'restriction_type' => 'blocked',
+            'restriction_reason' => 'Admin blocked number',
+            'requires_manual_review' => 1,
+            'is_blocked' => 1,
         ]);
     }
 
@@ -121,6 +178,11 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '14',
             'max_amount' => 100,
+            'is_restricted' => '1',
+            'restriction_type' => 'blocked',
+            'restriction_reason' => 'Should be blocked',
+            'requires_manual_review' => '1',
+            'is_blocked' => '1',
         ])->assertForbidden();
         $this->actingAs($seller)->delete(route('limits.delete', $limit))->assertForbidden();
     }
@@ -152,6 +214,11 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '23',
             'max_amount' => 100,
+            'is_restricted' => '1',
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Viewer cannot edit',
+            'requires_manual_review' => '1',
+            'is_blocked' => '1',
         ])->assertForbidden();
         $this->actingAs($viewer)->delete(route('limits.delete', $limit))->assertForbidden();
     }
@@ -216,6 +283,10 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'max_amount' => 200,
             'apply_to' => 'all',
+            'bulk_is_restricted' => '1',
+            'bulk_restriction_type' => 'restricted',
+            'bulk_restriction_reason' => 'Bulk restriction',
+            'bulk_requires_manual_review' => '1',
         ])->assertRedirect();
 
         $this->assertDatabaseCount('number_limits', 100);
@@ -225,6 +296,10 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '00',
             'max_amount' => '200.00',
+            'is_restricted' => 1,
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Bulk restriction',
+            'requires_manual_review' => 1,
         ]);
         $this->assertDatabaseHas('number_limits', [
             'organization_id' => $owner->organization_id,
@@ -232,6 +307,10 @@ class NumberLimitManagementTest extends TestCase
             'draw_id' => $draw->id,
             'number' => '99',
             'max_amount' => '200.00',
+            'is_restricted' => 1,
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Bulk restriction',
+            'requires_manual_review' => 1,
         ]);
     }
 

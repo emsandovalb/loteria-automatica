@@ -57,6 +57,51 @@
                         @error('max_amount')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
 
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4">
+                        <div class="text-sm font-semibold text-slate-900">Restriction settings</div>
+
+                        <label class="flex items-start gap-3 text-sm text-slate-700">
+                            <input type="hidden" name="is_restricted" value="0">
+                            <input type="checkbox" name="is_restricted" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('is_restricted'))>
+                            <span>
+                                Mark as restricted
+                                <span class="block text-xs text-slate-500">Shows a visual warning on the board and limits pages.</span>
+                            </span>
+                        </label>
+
+                        <div>
+                            <label for="restriction_type" class="block text-sm font-medium text-slate-700">Restriction type</label>
+                            <select id="restriction_type" name="restriction_type" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+                                <option value="">Normal</option>
+                                <option value="normal" @selected(old('restriction_type') === 'normal')>Normal</option>
+                                <option value="restricted" @selected(old('restriction_type') === 'restricted')>Restricted</option>
+                                <option value="hot" @selected(old('restriction_type') === 'hot')>Hot</option>
+                                <option value="blocked" @selected(old('restriction_type') === 'blocked')>Blocked</option>
+                            </select>
+                            @error('restriction_type')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label for="restriction_reason" class="block text-sm font-medium text-slate-700">Restriction reason</label>
+                            <textarea id="restriction_reason" name="restriction_reason" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="Optional">{{ old('restriction_reason') }}</textarea>
+                            @error('restriction_reason')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <label class="flex items-start gap-3 text-sm text-slate-700">
+                                <input type="hidden" name="requires_manual_review" value="0">
+                                <input type="checkbox" name="requires_manual_review" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('requires_manual_review'))>
+                                <span>Requires manual review</span>
+                            </label>
+
+                            <label class="flex items-start gap-3 text-sm text-slate-700">
+                                <input type="hidden" name="is_blocked" value="0">
+                                <input type="checkbox" name="is_blocked" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('is_blocked'))>
+                                <span>Blocked</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="flex justify-end">
                         <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
                             Create limit
@@ -112,6 +157,46 @@
 
                     <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                         Bulk create will fill every number in the selected scope. The "missing" option keeps existing limits untouched.
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4">
+                        <div class="text-sm font-semibold text-slate-900">Optional restriction fields</div>
+                        <p class="text-xs text-slate-500">Leave these empty to keep the current restriction settings on existing rows.</p>
+
+                        <label class="flex items-start gap-3 text-sm text-slate-700">
+                            <input type="checkbox" name="bulk_is_restricted" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('bulk_is_restricted'))>
+                            <span>Mark generated limits as restricted</span>
+                        </label>
+
+                        <div>
+                            <label for="bulk_restriction_type" class="block text-sm font-medium text-slate-700">Restriction type</label>
+                            <select id="bulk_restriction_type" name="bulk_restriction_type" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+                                <option value="">Leave unchanged</option>
+                                <option value="normal" @selected(old('bulk_restriction_type') === 'normal')>Normal</option>
+                                <option value="restricted" @selected(old('bulk_restriction_type') === 'restricted')>Restricted</option>
+                                <option value="hot" @selected(old('bulk_restriction_type') === 'hot')>Hot</option>
+                                <option value="blocked" @selected(old('bulk_restriction_type') === 'blocked')>Blocked</option>
+                            </select>
+                            @error('bulk_restriction_type')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label for="bulk_restriction_reason" class="block text-sm font-medium text-slate-700">Restriction reason</label>
+                            <textarea id="bulk_restriction_reason" name="bulk_restriction_reason" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="Optional">{{ old('bulk_restriction_reason') }}</textarea>
+                            @error('bulk_restriction_reason')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <label class="flex items-start gap-3 text-sm text-slate-700">
+                                <input type="checkbox" name="bulk_requires_manual_review" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('bulk_requires_manual_review'))>
+                                <span>Requires manual review</span>
+                            </label>
+
+                            <label class="flex items-start gap-3 text-sm text-slate-700">
+                                <input type="checkbox" name="bulk_is_blocked" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('bulk_is_blocked'))>
+                                <span>Blocked</span>
+                            </label>
+                        </div>
                     </div>
 
                     <div class="flex justify-end">

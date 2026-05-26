@@ -7,7 +7,7 @@ class CustomerConfirmationMessageService
     public const TYPE_CONFIRMATION = 'confirmation';
     public const TYPE_MANUAL_REVIEW = 'manual_review';
 
-    public function generate(string $rawText, array $parserResult): string
+    public function generate(string $rawText, array $parserResult, ?string $reviewNotice = null): string
     {
         $items = $parserResult['items'] ?? [];
         $resolvedDraw = $parserResult['resolved_draw'] ?? null;
@@ -15,6 +15,13 @@ class CustomerConfirmationMessageService
         $availableDraws = $parserResult['available_draws'] ?? [];
 
         if ($items === []) {
+            if ($reviewNotice !== null) {
+                return implode("\n\n", [
+                    'Hemos recibido tu solicitud.',
+                    $reviewNotice,
+                ]);
+            }
+
             return implode("\n\n", [
                 'Hemos recibido tu solicitud, pero necesitamos revisión manual.',
                 'Mensaje recibido:',
@@ -39,6 +46,11 @@ class CustomerConfirmationMessageService
         }
 
         $lines[] = '';
+
+        if ($reviewNotice !== null) {
+            $lines[] = $reviewNotice;
+            return implode("\n", $lines);
+        }
 
         if ($resolvedDraw !== null) {
             $lines[] = 'Draw/schedule: ' . ($resolvedDraw['label'] ?? $resolvedDraw['name'] ?? ($resolvedDraw['draw_time'] ?? '-'));

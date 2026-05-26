@@ -93,7 +93,6 @@ class IntakeRequestController extends Controller
             'branches' => Branch::query()->whereIn('id', $branchIds)->orderBy('name')->get(),
             'draws' => Draw::query()
                 ->when($user?->organization_id, fn ($drawQuery) => $drawQuery->where('organization_id', $user->organization_id), fn ($drawQuery) => $drawQuery->whereRaw('1 = 0'))
-                ->where('status', Draw::STATUS_ACTIVE)
                 ->orderBy('draw_time')
                 ->get(),
             'filters' => $filters,
@@ -121,7 +120,6 @@ class IntakeRequestController extends Controller
             'draws' => $user?->organization_id
                 ? Draw::query()
                     ->where('organization_id', $user->organization_id)
-                    ->where('status', Draw::STATUS_ACTIVE)
                     ->orderBy('draw_time')
                     ->get()
                 : collect(),
@@ -147,7 +145,7 @@ class IntakeRequestController extends Controller
                 'integer',
                 Rule::exists('draws', 'id')->where(function ($query): void {
                     $query->where('organization_id', auth()->user()?->organization_id)
-                        ->where('status', Draw::STATUS_ACTIVE);
+                        ->whereIn('status', [Draw::STATUS_ACTIVE, Draw::STATUS_INACTIVE]);
                 }),
             ],
             'notes' => ['nullable', 'string', 'max:5000'],
@@ -290,35 +288,14 @@ class IntakeRequestController extends Controller
             return null;
         }
 
-        $limit = app(NumberLimitService::class)->limitFor(
+        $decision = app(NumberLimitService::class)->requestDecisionForAmount(
             $intakeRequest->organization,
             $intakeRequest->branch,
             $draw,
             $intakeRequest->detected_number,
+            (float) $intakeRequest->detected_amount,
         );
 
-        if ($limit === null) {
-            return null;
-        }
-
-        $activeAmount = app(NumberLimitService::class)->currentActiveAmount(
-            $intakeRequest->organization,
-            $intakeRequest->branch,
-            $draw,
-            $intakeRequest->detected_number,
-        );
-
-        if ($activeAmount <= (float) $limit->max_amount) {
-            return null;
-        }
-
-        return sprintf(
-            'Limit warning: current active amount for %s on %s %s would exceed max ¢%s.',
-            $intakeRequest->detected_number,
-            $intakeRequest->branch?->name ?? 'branch',
-            $draw->name,
-            rtrim(rtrim(number_format((float) $limit->max_amount, 2, '.', ''), '0'), '.'),
-        );
+        return $decision['warning'];
     }
 }
-

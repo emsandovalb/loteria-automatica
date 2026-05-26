@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\IntakeRequest;
+use App\Models\Draw;
 use App\Models\NumberLimit;
 use App\Models\BranchDailyClosure;
+use App\Policies\DrawPolicy;
 use App\Policies\IntakeRequestPolicy;
 use App\Policies\NumberLimitPolicy;
 use App\Policies\BranchDailyClosurePolicy;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Draw::class, DrawPolicy::class);
         Gate::policy(IntakeRequest::class, IntakeRequestPolicy::class);
         Gate::policy(BranchDailyClosure::class, BranchDailyClosurePolicy::class);
         Gate::policy(NumberLimit::class, NumberLimitPolicy::class);

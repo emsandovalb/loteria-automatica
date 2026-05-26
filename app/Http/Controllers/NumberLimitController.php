@@ -114,6 +114,11 @@ class NumberLimitController extends Controller
                 'draw_id' => ['required', 'integer', Rule::in($drawIds ?: [-1])],
                 'max_amount' => ['required', 'numeric', 'gt:0'],
                 'apply_to' => ['required', Rule::in(['all', 'missing'])],
+                'bulk_is_restricted' => ['nullable', 'boolean'],
+                'bulk_restriction_type' => ['nullable', Rule::in(NumberLimit::restrictionTypes())],
+                'bulk_restriction_reason' => ['nullable', 'string', 'max:5000'],
+                'bulk_requires_manual_review' => ['nullable', 'boolean'],
+                'bulk_is_blocked' => ['nullable', 'boolean'],
             ]);
 
             $branch = $branches->firstWhere('id', $validated['branch_id']);
@@ -140,9 +145,9 @@ class NumberLimitController extends Controller
                         'draw_id' => $draw->id,
                         'number' => $numberKey,
                     ],
-                    [
+                    array_merge([
                         'max_amount' => $validated['max_amount'],
-                    ]
+                    ], $this->bulkRestrictionAttributes($request))
                 );
 
                 $applied++;
@@ -171,6 +176,11 @@ class NumberLimitController extends Controller
                         ->where('draw_id', $request->integer('draw_id'))),
             ],
             'max_amount' => ['required', 'numeric', 'gt:0'],
+            'is_restricted' => ['nullable', 'boolean'],
+            'restriction_type' => ['nullable', Rule::in(NumberLimit::restrictionTypes())],
+            'restriction_reason' => ['nullable', 'string', 'max:5000'],
+            'requires_manual_review' => ['nullable', 'boolean'],
+            'is_blocked' => ['nullable', 'boolean'],
         ]);
 
         $branch = $branches->firstWhere('id', $validated['branch_id']);
@@ -183,7 +193,7 @@ class NumberLimitController extends Controller
             'draw_id' => $draw->id,
             'number' => $number,
             'max_amount' => $validated['max_amount'],
-        ]);
+        ] + $this->singleRestrictionAttributes($request));
 
         return redirect()
             ->route('limits.index', [
@@ -234,6 +244,11 @@ class NumberLimitController extends Controller
                     ->ignore($limit->id),
             ],
             'max_amount' => ['required', 'numeric', 'gt:0'],
+            'is_restricted' => ['nullable', 'boolean'],
+            'restriction_type' => ['nullable', Rule::in(NumberLimit::restrictionTypes())],
+            'restriction_reason' => ['nullable', 'string', 'max:5000'],
+            'requires_manual_review' => ['nullable', 'boolean'],
+            'is_blocked' => ['nullable', 'boolean'],
         ]);
 
         $branch = $branches->firstWhere('id', $validated['branch_id']);
@@ -244,7 +259,7 @@ class NumberLimitController extends Controller
             'draw_id' => $draw->id,
             'number' => str_pad($validated['number'], 2, '0', STR_PAD_LEFT),
             'max_amount' => $validated['max_amount'],
-        ]);
+        ] + $this->singleRestrictionAttributes($request));
 
         return redirect()
             ->route('limits.index', [
@@ -289,5 +304,53 @@ class NumberLimitController extends Controller
             ->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId), fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('draw_time')
             ->get();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function singleRestrictionAttributes(Request $request): array
+    {
+        return [
+            'is_restricted' => $request->boolean('is_restricted'),
+            'restriction_type' => $request->filled('restriction_type')
+                ? $request->string('restriction_type')->toString()
+                : null,
+            'restriction_reason' => $request->filled('restriction_reason')
+                ? $request->string('restriction_reason')->toString()
+                : null,
+            'requires_manual_review' => $request->boolean('requires_manual_review'),
+            'is_blocked' => $request->boolean('is_blocked'),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function bulkRestrictionAttributes(Request $request): array
+    {
+        $attributes = [];
+
+        if ($request->has('bulk_is_restricted')) {
+            $attributes['is_restricted'] = $request->boolean('bulk_is_restricted');
+        }
+
+        if ($request->filled('bulk_restriction_type')) {
+            $attributes['restriction_type'] = $request->string('bulk_restriction_type')->toString();
+        }
+
+        if ($request->filled('bulk_restriction_reason')) {
+            $attributes['restriction_reason'] = $request->string('bulk_restriction_reason')->toString();
+        }
+
+        if ($request->has('bulk_requires_manual_review')) {
+            $attributes['requires_manual_review'] = $request->boolean('bulk_requires_manual_review');
+        }
+
+        if ($request->has('bulk_is_blocked')) {
+            $attributes['is_blocked'] = $request->boolean('bulk_is_blocked');
+        }
+
+        return $attributes;
     }
 }

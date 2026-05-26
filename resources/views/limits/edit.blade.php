@@ -53,6 +53,51 @@
                         <input id="max_amount" name="max_amount" type="number" step="0.01" min="0.01" value="{{ old('max_amount', $limit->max_amount) }}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
                         @error('max_amount')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
+
+                    <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4">
+                        <div class="text-sm font-semibold text-slate-900">Restriction settings</div>
+
+                        <label class="flex items-start gap-3 text-sm text-slate-700">
+                            <input type="hidden" name="is_restricted" value="0">
+                            <input type="checkbox" name="is_restricted" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('is_restricted', $limit->is_restricted))>
+                            <span>
+                                Mark as restricted
+                                <span class="block text-xs text-slate-500">Shows a visual warning on the board and limits pages.</span>
+                            </span>
+                        </label>
+
+                        <div>
+                            <label for="restriction_type" class="block text-sm font-medium text-slate-700">Restriction type</label>
+                            <select id="restriction_type" name="restriction_type" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
+                                <option value="">Normal</option>
+                                <option value="normal" @selected(old('restriction_type', $limit->restriction_type) === 'normal')>Normal</option>
+                                <option value="restricted" @selected(old('restriction_type', $limit->restriction_type) === 'restricted')>Restricted</option>
+                                <option value="hot" @selected(old('restriction_type', $limit->restriction_type) === 'hot')>Hot</option>
+                                <option value="blocked" @selected(old('restriction_type', $limit->restriction_type) === 'blocked')>Blocked</option>
+                            </select>
+                            @error('restriction_type')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div>
+                            <label for="restriction_reason" class="block text-sm font-medium text-slate-700">Restriction reason</label>
+                            <textarea id="restriction_reason" name="restriction_reason" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="Optional">{{ old('restriction_reason', $limit->restriction_reason) }}</textarea>
+                            @error('restriction_reason')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <label class="flex items-start gap-3 text-sm text-slate-700">
+                                <input type="hidden" name="requires_manual_review" value="0">
+                                <input type="checkbox" name="requires_manual_review" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('requires_manual_review', $limit->requires_manual_review))>
+                                <span>Requires manual review</span>
+                            </label>
+
+                            <label class="flex items-start gap-3 text-sm text-slate-700">
+                                <input type="hidden" name="is_blocked" value="0">
+                                <input type="checkbox" name="is_blocked" value="1" class="mt-1 rounded border-slate-300 text-slate-900 focus:ring-slate-500" @checked(old('is_blocked', $limit->is_blocked))>
+                                <span>Blocked</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">

@@ -94,6 +94,7 @@ class NumberBoardController extends Controller
             ->where('organization_id', $organizationId)
             ->where('status', Draw::STATUS_ACTIVE)
             ->firstOrFail();
+        $drawClosed = ! $draw->isOpenForIntake();
 
         $customer = null;
 
@@ -126,22 +127,35 @@ class NumberBoardController extends Controller
             ]);
         }
 
-        $warning = $this->numberLimitService->warningForAmount(
-            $user->organization,
-            $branch,
-            $draw,
-            $validated['number'],
-            (float) $validated['amount'],
-        );
+        if ($drawClosed) {
+            $status = IntakeRequest::STATUS_NEEDS_REVIEW;
+            $notes = trim(implode("\n\n", array_filter([
+                'Draw is closed for intake. Manual review required.',
+                $validated['notes'] ?? null,
+            ])));
+            $decision = [
+                'warning' => null,
+            ];
+        } else {
+            $decision = $this->numberLimitService->requestDecisionForAmount(
+                $user->organization,
+                $branch,
+                $draw,
+                $validated['number'],
+                (float) $validated['amount'],
+            );
 
-        $status = $warning === null
-            ? IntakeRequest::STATUS_PENDING
-            : IntakeRequest::STATUS_NEEDS_REVIEW;
+            $status = $decision['status'];
 
-        $notes = trim(implode(' ', array_filter([
-            $validated['notes'] ?? null,
-            $warning,
-        ])));
+            $notes = match ($decision['reason']) {
+                'blocked', 'manual_review' => $decision['notes'],
+                'over_limit' => trim(implode(' ', array_filter([
+                    $validated['notes'] ?? null,
+                    $decision['notes'],
+                ]))),
+                default => trim((string) ($validated['notes'] ?? '')),
+            };
+        }
 
         $requestModel = IntakeRequest::create([
             'organization_id' => $organizationId,
@@ -179,7 +193,9 @@ class NumberBoardController extends Controller
                 'branch_id' => $branch->id,
                 'draw_id' => $draw->id,
             ])
-            ->with('status', $warning ?? 'Manual request created.');
+            ->with('status', $drawClosed
+                ? 'Draw is closed for intake. Manual review required.'
+                : ($decision['warning'] ?? 'Manual request created.'));
     }
 
     /**
@@ -199,7 +215,11 @@ class NumberBoardController extends Controller
                     'max_amount' => null,
                     'available_amount' => null,
                     'percentage_used' => null,
-                    'status' => 'available',
+                    'status' => 'no_limit',
+                    'is_restricted' => false,
+                    'restriction_type' => null,
+                    'requires_manual_review' => false,
+                    'is_blocked' => false,
                 ])->all(),
                 'summary' => [
                     'confirmed_amount' => 0,
@@ -263,6 +283,10 @@ class NumberBoardController extends Controller
                 'available_amount' => $limitState['available_amount'],
                 'percentage_used' => $limitState['percentage_used'],
                 'status' => $limitState['status'],
+                'is_restricted' => $limitState['is_restricted'],
+                'restriction_type' => $limitState['restriction_type'],
+                'requires_manual_review' => $limitState['requires_manual_review'],
+                'is_blocked' => $limitState['is_blocked'],
             ];
 
             $summary['confirmed_amount'] += $confirmedAmount;

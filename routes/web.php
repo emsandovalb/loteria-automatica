@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\BranchDailyClosureController;
+use App\Http\Controllers\DrawController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncomingMessageController;
 use App\Http\Controllers\IntakeRequestController;
@@ -21,6 +22,9 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('/draws', [DrawController::class, 'index'])->name('draws.index');
+    Route::get('/draws/{draw}/edit', [DrawController::class, 'edit'])->name('draws.edit');
+    Route::patch('/draws/{draw}', [DrawController::class, 'update'])->name('draws.update');
     Route::get('/closures', [BranchDailyClosureController::class, 'index'])->name('closures.index');
     Route::post('/closures', [BranchDailyClosureController::class, 'store'])->name('closures.store');
     Route::get('/closures/{closure}', [BranchDailyClosureController::class, 'show'])->name('closures.show');

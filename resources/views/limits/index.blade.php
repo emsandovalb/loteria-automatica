@@ -68,17 +68,40 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Draw</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Number</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Max amount</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Flags</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Updated</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 bg-white">
                     @forelse ($limits as $limit)
-                        <tr>
+                        <tr class="{{ $limit->is_blocked ? 'bg-red-50/60' : ($limit->requires_manual_review ? 'bg-purple-50/60' : ($limit->is_restricted ? 'bg-amber-50/60' : '')) }}">
                             <td class="px-4 py-3 text-sm text-slate-900">{{ $limit->branch?->name ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm text-slate-700">{{ $limit->draw?->name ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm font-semibold text-brand-navy">{{ $limit->number }}</td>
                             <td class="px-4 py-3 text-sm text-slate-700">&#8353;{{ number_format((float) $limit->max_amount, 2, '.', ',') }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <div class="flex flex-wrap gap-2">
+                                    @if ($limit->is_blocked)
+                                        <span class="brand-badge bg-red-100 text-red-700">blocked</span>
+                                    @endif
+                                    @if ($limit->is_restricted)
+                                        <span class="brand-badge bg-amber-100 text-amber-800">restricted</span>
+                                    @endif
+                                    @if ($limit->restriction_type === \App\Models\NumberLimit::RESTRICTION_TYPE_HOT)
+                                        <span class="brand-badge bg-yellow-100 text-yellow-800">hot</span>
+                                    @endif
+                                    @if ($limit->requires_manual_review)
+                                        <span class="brand-badge bg-purple-100 text-purple-800">manual review</span>
+                                    @endif
+                                    @if (! $limit->is_blocked && ! $limit->is_restricted && ! $limit->requires_manual_review && in_array($limit->restriction_type, [null, \App\Models\NumberLimit::RESTRICTION_TYPE_NORMAL], true))
+                                        <span class="brand-badge bg-slate-100 text-slate-600">normal</span>
+                                    @endif
+                                </div>
+                                @if ($limit->restriction_reason)
+                                    <div class="mt-2 text-xs text-slate-500">{{ $limit->restriction_reason }}</div>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-sm text-slate-700">{{ $limit->updated_at?->format('Y-m-d H:i') }}</td>
                             <td class="px-4 py-3 text-sm">
                                 @if ($canManageLimits)
@@ -97,7 +120,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-sm text-slate-500">No limits found for the selected filters.</td>
+                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">No limits found for the selected filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

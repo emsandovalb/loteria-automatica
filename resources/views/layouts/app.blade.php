@@ -44,6 +44,7 @@
                             ['label' => 'Dashboard', 'href' => 'dashboard', 'active' => 'dashboard', 'icon' => 'M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8.5Z'],
                             ['label' => 'Simulator', 'href' => 'simulator.index', 'active' => 'simulator.*', 'icon' => 'M4 17l4-8 4 5 4-7 4 10'],
                             ['label' => 'Numbers', 'href' => 'numbers.index', 'active' => 'numbers.*', 'icon' => 'M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm-2-3h4M12 8v7'],
+                            ['label' => 'Draws', 'href' => 'draws.index', 'active' => 'draws.*', 'icon' => 'M8 3v3M16 3v3M4 8h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z'],
                             ['label' => 'Limits', 'href' => 'limits.index', 'active' => 'limits.*', 'icon' => 'M12 3 4 7v5c0 5 3.5 8.7 8 10 4.5-1.3 8-5 8-10V7l-8-4Zm0 7a2 2 0 0 1 2 2v1h1v2h-1v1a2 2 0 0 1-4 0v-1h-1v-2h1v-1a2 2 0 0 1 2-2Z'],
                             ['label' => 'Branches', 'href' => 'branches.index', 'active' => 'branches.*', 'icon' => 'M5 20V9l7-4 7 4v11M9 20v-6h6v6M8 11h.01M12 11h.01M16 11h.01'],
                             ['label' => 'Closures', 'href' => 'closures.index', 'active' => 'closures.*', 'icon' => 'M8 3v3M16 3v3M4 8h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z'],

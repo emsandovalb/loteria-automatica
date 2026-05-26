@@ -27,6 +27,13 @@
                         <div>
                             <div class="text-sm text-slate-500">Draw</div>
                             <div class="mt-1 text-base font-semibold text-slate-900">{{ $request->draw?->name ?? '-' }}</div>
+                            @if ($request->draw)
+                                <div class="mt-2">
+                                    <span class="brand-badge {{ $request->draw->isOpenForIntake() ? 'bg-green-100 text-green-800' : ($request->draw->closingReason() === 'manually_closed' ? 'bg-amber-100 text-amber-800' : ($request->draw->closingReason() === 'inactive' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-800')) }}">
+                                        {{ $request->draw->intakeStatusLabel() }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                         <div>
                             <div class="text-sm text-slate-500">Customer</div>

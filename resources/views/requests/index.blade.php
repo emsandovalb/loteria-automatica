@@ -100,9 +100,16 @@
                             <td class="px-4 py-3 text-sm text-slate-900">{{ $request->detected_number ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm">
                                 @if ($request->draw)
-                                    <span class="inline-flex rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-800 brand-badge">
-                                        {{ $request->draw->name }}
-                                    </span>
+                                    <div class="space-y-1">
+                                        <span class="inline-flex rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-800 brand-badge">
+                                            {{ $request->draw->name }}
+                                        </span>
+                                        <div>
+                                            <span class="brand-badge {{ $request->draw->isOpenForIntake() ? 'bg-green-100 text-green-800' : ($request->draw->closingReason() === 'manually_closed' ? 'bg-amber-100 text-amber-800' : ($request->draw->closingReason() === 'inactive' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-800')) }}">
+                                                {{ $request->draw->intakeStatusLabel() }}
+                                            </span>
+                                        </div>
+                                    </div>
                                 @else
                                     <span class="text-slate-400">-</span>
                                 @endif

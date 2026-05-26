@@ -71,11 +71,16 @@ class IntakeMessageService
             $parserResult = $this->messageParserService->parse($rawText);
             $drawReference = $parserResult['draw_reference'] ?? null;
             $resolvedDraw = $this->resolveDraw($user, $drawReference);
+            $drawClosed = $resolvedDraw !== null && ! $resolvedDraw->isOpenForIntake();
+
             $parserResult['resolved_draw'] = $resolvedDraw ? [
                 'id' => $resolvedDraw->id,
                 'name' => $resolvedDraw->name,
                 'draw_time' => $resolvedDraw->draw_time,
                 'label' => $this->drawLabel($resolvedDraw),
+                'is_open_for_intake' => $resolvedDraw->isOpenForIntake(),
+                'closing_reason' => $resolvedDraw->closingReason(),
+                'intake_status_label' => $resolvedDraw->intakeStatusLabel(),
             ] : null;
             $parserResult['draw_reference_label'] = $drawReference;
             $parserResult['available_draws'] = $this->availableDraws($user);
@@ -93,6 +98,7 @@ class IntakeMessageService
             $requestItems = $parserResult['items'] ?? [];
             $requestReason = $parserResult['reason'] ?? null;
             $requests = [];
+            $customerReviewNotice = null;
 
             if ($requestItems === []) {
                 $requestItems = [[
@@ -106,21 +112,27 @@ class IntakeMessageService
                 $detectedNumber = $item['detected_number'] ?? null;
                 $detectedAmount = $item['detected_amount'] ?? null;
                 $notes = $requestReason;
-                $limitWarning = null;
                 $itemNeedsReview = (bool) ($parserResult['needs_review'] ?? true) || count($requestItems) > 1;
+                $decision = null;
 
-                if ($drawReference === null && $detectedNumber !== null && $detectedAmount !== null) {
+                if ($drawClosed) {
+                    $itemNeedsReview = true;
+                    $notes = 'Draw is closed for intake. Manual review required.';
+                    $customerReviewNotice = $this->closedDrawCustomerReviewNotice();
+                }
+
+                if (! $drawClosed && $drawReference === null && $detectedNumber !== null && $detectedAmount !== null) {
                     $itemNeedsReview = true;
                     $notes = 'Draw schedule is required. Manual review required.';
                 }
 
-                if ($drawReference !== null && $draw === null && $detectedNumber !== null && $detectedAmount !== null) {
+                if (! $drawClosed && $drawReference !== null && $draw === null && $detectedNumber !== null && $detectedAmount !== null) {
                     $itemNeedsReview = true;
                     $notes = 'Draw schedule could not be matched. Manual review required.';
                 }
 
-                if ($draw !== null && $detectedNumber !== null && $detectedAmount !== null) {
-                    $limitWarning = $this->numberLimitService->warningForAmount(
+                if (! $drawClosed && $draw !== null && $detectedNumber !== null && $detectedAmount !== null) {
+                    $decision = $this->numberLimitService->requestDecisionForAmount(
                         $user->organization,
                         $branch,
                         $draw,
@@ -128,9 +140,14 @@ class IntakeMessageService
                         (float) $detectedAmount,
                     );
 
-                    if ($limitWarning !== null) {
+                    if ($decision['warning'] !== null) {
                         $itemNeedsReview = true;
-                        $notes = trim(implode(' ', array_filter([$notes, $limitWarning])));
+                        if (in_array($decision['reason'], ['blocked', 'manual_review'], true)) {
+                            $notes = $decision['notes'];
+                            $customerReviewNotice ??= 'Esta solicitud requiere revisión manual antes de confirmarse.';
+                        } else {
+                            $notes = trim(implode(' ', array_filter([$notes, $decision['warning']])));
+                        }
                     }
                 }
 
@@ -173,6 +190,18 @@ class IntakeMessageService
                 ]);
 
                 $requests[] = $request;
+            }
+
+            if ($customerReviewNotice !== null) {
+                $responseText = $this->customerConfirmationMessageService->generate(
+                    $rawText,
+                    $parserResult,
+                    $customerReviewNotice,
+                );
+                $messageResponse->update([
+                    'response_type' => CustomerConfirmationMessageService::TYPE_MANUAL_REVIEW,
+                    'response_text' => $responseText,
+                ]);
             }
 
             return [
@@ -233,6 +262,11 @@ class IntakeMessageService
     private function drawLabel(Draw $draw): string
     {
         return $draw->name;
+    }
+
+    private function closedDrawCustomerReviewNotice(): string
+    {
+        return "Esta solicitud requiere revisión manual antes de confirmarse.\n\nHemos recibido tu solicitud, pero el sorteo indicado requiere revisión porque el horario de recepción pudo haber cerrado.";
     }
 
     private function drawMatchesReference(Draw $draw, string $drawReference): bool
