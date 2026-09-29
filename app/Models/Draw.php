@@ -25,6 +25,8 @@ class Draw extends Model
         'closes_at_next_day',
         'is_accepting_requests',
         'status',
+        'prize_multiplier',
+        'reventado_multiplier',
     ];
 
     protected $attributes = [
@@ -32,6 +34,7 @@ class Draw extends Model
         'timezone' => 'America/Costa_Rica',
         'closes_at_next_day' => false,
         'is_accepting_requests' => true,
+        'prize_multiplier' => 80,
     ];
 
     protected function casts(): array
@@ -43,6 +46,8 @@ class Draw extends Model
             'timezone' => 'string',
             'closes_at_next_day' => 'boolean',
             'is_accepting_requests' => 'boolean',
+            'prize_multiplier' => 'decimal:2',
+            'reventado_multiplier' => 'decimal:2',
         ];
     }
 
@@ -59,6 +64,26 @@ class Draw extends Model
     public function numberLimits(): HasMany
     {
         return $this->hasMany(NumberLimit::class);
+    }
+
+    public function results(): HasMany
+    {
+        return $this->hasMany(DrawResult::class);
+    }
+
+    public function offersReventado(): bool
+    {
+        return $this->reventado_multiplier !== null && (float) $this->reventado_multiplier > 0;
+    }
+
+    /**
+     * The business day (Y-m-d) a sale made at $now belongs to, in the draw's timezone.
+     */
+    public function operatingDate(?Carbon $now = null): string
+    {
+        $timezone = $this->timezone ?: config('app.timezone', 'UTC');
+
+        return ($now ?? now())->copy()->setTimezone($timezone)->toDateString();
     }
 
     public function isOpenForIntake(?Carbon $now = null): bool
@@ -105,13 +130,13 @@ class Draw extends Model
 
     public function intakeStatusLabel(?Carbon $now = null): string
     {
-        return match ($this->closingReason($now)) {
+        return __(match ($this->closingReason($now)) {
             'inactive' => 'Inactive',
             'manually_closed' => 'Manually closed',
             'closed_by_time' => 'Closed by time',
             'closed_by_cutoff' => 'Closed by cutoff',
             default => 'Open',
-        };
+        });
     }
 
     private function timeOnDate(Carbon $reference, string $time): Carbon

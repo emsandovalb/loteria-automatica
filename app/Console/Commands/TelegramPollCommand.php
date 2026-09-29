@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\Branch;
 use App\Models\IncomingMessage;
 use App\Models\User;
+use App\Services\ClarificationReplyService;
+use App\Services\CustomerMessengerService;
 use App\Services\IntakeIntentService;
 use App\Services\IntakeMessageService;
 use App\Services\Telegram\TelegramBotService;
@@ -168,6 +170,25 @@ class TelegramPollCommand extends Command
                 if ($intent['type'] === IntakeIntentService::TYPE_GREETING) {
                     $this->rememberProcessedTelegramUpdateId($updateId);
                     $telegramBotService->sendMessage($chatId, $intakeIntentService->greetingReply());
+                    $processedCount++;
+
+                    continue;
+                }
+
+                // An operator asked this chat a question: the message answers it instead of being a new order.
+                $clarificationReplyService = app(ClarificationReplyService::class);
+                $openRequest = $clarificationReplyService->openRequestFor(Branch::CHANNEL_TYPE_TELEGRAM, $chatId);
+
+                if ($openRequest !== null) {
+                    $clarificationReplyService->recordReply(
+                        request: $openRequest,
+                        text: $messageText,
+                        payload: $update,
+                        externalMessageId: $updateId,
+                        toIdentifier: $telegramBotService->getBotIdentifier(),
+                    );
+                    $this->rememberProcessedTelegramUpdateId($updateId);
+                    app(CustomerMessengerService::class)->acknowledgeReply($openRequest->fresh());
                     $processedCount++;
 
                     continue;

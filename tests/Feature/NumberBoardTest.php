@@ -302,6 +302,44 @@ class NumberBoardTest extends TestCase
         ]);
     }
 
+    public function test_restricted_number_creates_needs_review(): void
+    {
+        [$owner, , $branchOne] = $this->makeOrganizationWithBranchesAndDraws();
+        $draw = $this->drawByName($owner, '2:00 pm');
+
+        NumberLimit::create([
+            'organization_id' => $owner->organization_id,
+            'branch_id' => $branchOne->id,
+            'draw_id' => $draw->id,
+            'number' => '29',
+            'max_amount' => 1000,
+            'is_restricted' => true,
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Restricted for review',
+            'requires_manual_review' => false,
+            'is_blocked' => false,
+        ]);
+
+        $this->actingAs($owner)->post(route('numbers.store'), [
+            'branch_id' => $branchOne->id,
+            'draw_id' => $draw->id,
+            'number' => '29',
+            'amount' => 100,
+            'customer_phone' => '+50255510013',
+            'notes' => 'Manual board entry',
+        ])->assertRedirect(route('numbers.index', ['branch_id' => $branchOne->id, 'draw_id' => $draw->id]));
+
+        $this->assertDatabaseHas('requests', [
+            'organization_id' => $owner->organization_id,
+            'branch_id' => $branchOne->id,
+            'draw_id' => $draw->id,
+            'detected_number' => '29',
+            'detected_amount' => 100,
+            'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+            'notes' => 'Number is restricted for this draw. Manual review required.',
+        ]);
+    }
+
     public function test_manual_review_number_creates_needs_review(): void
     {
         [$owner, , $branchOne] = $this->makeOrganizationWithBranchesAndDraws();

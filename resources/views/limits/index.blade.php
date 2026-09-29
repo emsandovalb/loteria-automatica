@@ -2,14 +2,14 @@
     <div class="space-y-6">
         <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div class="max-w-3xl">
-                <div class="brand-badge bg-brand-primary/10 text-brand-primary">Limit management</div>
-                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-brand-navy">Limits</h1>
-                <p class="mt-1 max-w-2xl text-sm text-slate-600">Manage number limits by branch, draw, and number.</p>
+                <div class="brand-badge bg-brand-primary/10 text-brand-primary">{{ __('Limit management') }}</div>
+                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-brand-navy">{{ __('Limits') }}</h1>
+                <p class="mt-1 max-w-2xl text-sm text-slate-600">{{ __('Manage number limits by branch, draw, and number.') }}</p>
             </div>
 
             @if ($canManageLimits)
                 <a href="{{ route('limits.create', request()->only(['branch_id', 'draw_id'])) }}" class="brand-btn-primary">
-                    Create limit
+                    {{ __('Create limit') }}
                 </a>
             @endif
         </div>
@@ -23,9 +23,9 @@
         <div class="brand-card p-5">
             <form method="GET" action="{{ route('limits.index') }}" class="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
                 <div>
-                    <label for="branch_id" class="block text-sm font-medium text-slate-700">Branch</label>
+                    <label for="branch_id" class="block text-sm font-medium text-slate-700">{{ __('Branch') }}</label>
                     <select id="branch_id" name="branch_id" class="brand-input mt-1 block w-full rounded-xl">
-                        <option value="">All branches</option>
+                        <option value="">{{ __('All branches') }}</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->id }}" @selected((string) ($filters['branch_id'] ?? '') === (string) $branch->id)>{{ $branch->name }}</option>
                         @endforeach
@@ -33,9 +33,9 @@
                 </div>
 
                 <div>
-                    <label for="draw_id" class="block text-sm font-medium text-slate-700">Draw</label>
+                    <label for="draw_id" class="block text-sm font-medium text-slate-700">{{ __('Draw') }}</label>
                     <select id="draw_id" name="draw_id" class="brand-input mt-1 block w-full rounded-xl">
-                        <option value="">All draws</option>
+                        <option value="">{{ __('All draws') }}</option>
                         @foreach ($draws as $draw)
                             <option value="{{ $draw->id }}" @selected((string) ($filters['draw_id'] ?? '') === (string) $draw->id)>{{ $draw->name }}</option>
                         @endforeach
@@ -43,20 +43,20 @@
                 </div>
 
                 <div>
-                    <label for="number" class="block text-sm font-medium text-slate-700">Number</label>
+                    <label for="number" class="block text-sm font-medium text-slate-700">{{ __('Number') }}</label>
                     <input id="number" name="number" value="{{ $filters['number'] ?? '' }}" type="text" maxlength="2" class="brand-input mt-1 block w-full rounded-xl" placeholder="00">
                 </div>
 
                 <div class="flex items-end gap-2 md:col-span-3 xl:col-span-1">
-                    <button type="submit" class="brand-btn-primary">Apply</button>
-                    <a href="{{ route('limits.index') }}" class="brand-btn-secondary">Reset</a>
+                    <button type="submit" class="brand-btn-primary">{{ __('Apply') }}</button>
+                    <a href="{{ route('limits.index') }}" class="brand-btn-secondary">{{ __('Reset') }}</a>
                 </div>
             </form>
         </div>
 
         @if (! $canManageLimits)
             <div class="rounded-2xl border border-slate-200/80 bg-white p-5 text-sm text-slate-600 shadow-sm">
-                Read-only access. Limits can be viewed but not edited from this account.
+                {{ __('Read-only access. Limits can be viewed but not edited from this account.') }}
             </div>
         @endif
 
@@ -64,13 +64,13 @@
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Branch</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Draw</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Number</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Max amount</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Flags</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Updated</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Branch') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Draw') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Number') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Max amount') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Flags') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Updated') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 bg-white">
@@ -83,19 +83,19 @@
                             <td class="px-4 py-3 text-sm">
                                 <div class="flex flex-wrap gap-2">
                                     @if ($limit->is_blocked)
-                                        <span class="brand-badge bg-red-100 text-red-700">blocked</span>
+                                        <span class="brand-badge bg-red-100 text-red-700">{{ __('blocked') }}</span>
                                     @endif
                                     @if ($limit->is_restricted)
-                                        <span class="brand-badge bg-amber-100 text-amber-800">restricted</span>
+                                        <span class="brand-badge bg-amber-100 text-amber-800">{{ __('restricted') }}</span>
                                     @endif
                                     @if ($limit->restriction_type === \App\Models\NumberLimit::RESTRICTION_TYPE_HOT)
-                                        <span class="brand-badge bg-yellow-100 text-yellow-800">hot</span>
+                                        <span class="brand-badge bg-yellow-100 text-yellow-800">{{ __('hot') }}</span>
                                     @endif
                                     @if ($limit->requires_manual_review)
-                                        <span class="brand-badge bg-purple-100 text-purple-800">manual review</span>
+                                        <span class="brand-badge bg-purple-100 text-purple-800">{{ __('manual review') }}</span>
                                     @endif
                                     @if (! $limit->is_blocked && ! $limit->is_restricted && ! $limit->requires_manual_review && in_array($limit->restriction_type, [null, \App\Models\NumberLimit::RESTRICTION_TYPE_NORMAL], true))
-                                        <span class="brand-badge bg-slate-100 text-slate-600">normal</span>
+                                        <span class="brand-badge bg-slate-100 text-slate-600">{{ __('normal') }}</span>
                                     @endif
                                 </div>
                                 @if ($limit->restriction_reason)
@@ -106,21 +106,21 @@
                             <td class="px-4 py-3 text-sm">
                                 @if ($canManageLimits)
                                     <div class="flex flex-wrap gap-2">
-                                        <a href="{{ route('limits.edit', $limit) }}" class="brand-btn-secondary px-3 py-1.5 text-xs">Edit</a>
+                                        <a href="{{ route('limits.edit', $limit) }}" class="brand-btn-secondary px-3 py-1.5 text-xs">{{ __('Edit') }}</a>
                                         <form method="POST" action="{{ route('limits.delete', $limit) }}" onsubmit="return confirm('Delete this limit?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="brand-btn-danger px-3 py-1.5 text-xs">Delete</button>
+                                            <button type="submit" class="brand-btn-danger px-3 py-1.5 text-xs">{{ __('Delete') }}</button>
                                         </form>
                                     </div>
                                 @else
-                                    <span class="text-slate-400">View only</span>
+                                    <span class="text-slate-400">{{ __('View only') }}</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">No limits found for the selected filters.</td>
+                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">{{ __('No limits found for the selected filters.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

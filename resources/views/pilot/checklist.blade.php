@@ -1,16 +1,16 @@
 <x-app-layout>
     <div class="space-y-6">
         <div>
-            <h1 class="text-2xl font-semibold text-slate-900">Pilot Checklist</h1>
-            <p class="mt-1 text-sm text-slate-600">Use this as a quick readiness check before a controlled pilot.</p>
+            <h1 class="text-2xl font-semibold text-slate-900">{{ __('Pilot Checklist') }}</h1>
+            <p class="mt-1 text-sm text-slate-600">{{ __('Use this as a quick readiness check before a controlled pilot.') }}</p>
         </div>
 
         <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Item</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Item') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Status') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 bg-white">
@@ -32,7 +32,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="2" class="px-4 py-8 text-center text-sm text-slate-500">No checklist items available.</td>
+                            <td colspan="2" class="px-4 py-8 text-center text-sm text-slate-500">{{ __('No checklist items available.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

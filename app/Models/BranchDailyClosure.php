@@ -20,6 +20,7 @@ class BranchDailyClosure extends Model
         'total_rejected',
         'total_pending',
         'total_amount_confirmed',
+        'total_prizes_amount',
         'notes',
         'closed_at',
     ];
@@ -34,6 +35,7 @@ class BranchDailyClosure extends Model
             'total_rejected' => 'integer',
             'total_pending' => 'integer',
             'total_amount_confirmed' => 'decimal:2',
+            'total_prizes_amount' => 'decimal:2',
         ];
     }
 

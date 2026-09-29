@@ -6,6 +6,7 @@ class CustomerConfirmationMessageService
 {
     public const TYPE_CONFIRMATION = 'confirmation';
     public const TYPE_MANUAL_REVIEW = 'manual_review';
+    public const TYPE_DAY_CLOSED = 'day_closed';
 
     public function generate(string $rawText, array $parserResult, ?string $reviewNotice = null): string
     {
@@ -34,6 +35,11 @@ class CustomerConfirmationMessageService
 
         foreach ($items as $item) {
             $amount = $this->formatAmount($item['detected_amount'] ?? null);
+
+            if (! empty($item['reventado_amount'])) {
+                $amount .= ' + reventado ₡' . $this->formatAmount($item['reventado_amount']);
+            }
+
             $number = $item['detected_number'] ?? '-';
             $drawLabel = $resolvedDraw['label'] ?? $resolvedDraw['name'] ?? $drawReference;
 
@@ -53,7 +59,7 @@ class CustomerConfirmationMessageService
         }
 
         if ($resolvedDraw !== null) {
-            $lines[] = 'Draw/schedule: ' . ($resolvedDraw['label'] ?? $resolvedDraw['name'] ?? ($resolvedDraw['draw_time'] ?? '-'));
+            $lines[] = 'Sorteo: ' . ($resolvedDraw['label'] ?? $resolvedDraw['name'] ?? ($resolvedDraw['draw_time'] ?? '-'));
         } elseif ($drawReference !== null) {
             $lines[] = 'Necesitamos confirmar el sorteo/horario:';
             $lines[] = '• ' . $drawReference;

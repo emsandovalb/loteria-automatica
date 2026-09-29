@@ -14,12 +14,19 @@ class IntakeRequestPolicy
 
     public function update(User $user, IntakeRequest $intakeRequest): bool
     {
-        return $this->isManageable($user, $intakeRequest) && $this->isEditable($intakeRequest);
+        return $this->isManageable($user, $intakeRequest)
+            && $this->isEditable($intakeRequest)
+            && ! $intakeRequest->hasDrawResult();
     }
 
+    /**
+     * After the winning number is known a pending bet can only be rejected, never confirmed.
+     */
     public function confirm(User $user, IntakeRequest $intakeRequest): bool
     {
-        return $this->isManageable($user, $intakeRequest) && $this->isReviewable($intakeRequest);
+        return $this->isManageable($user, $intakeRequest)
+            && $this->isReviewable($intakeRequest)
+            && ! $intakeRequest->hasDrawResult();
     }
 
     public function reject(User $user, IntakeRequest $intakeRequest): bool
@@ -55,7 +62,9 @@ class IntakeRequestPolicy
 
     private function isManageable(User $user, IntakeRequest $intakeRequest): bool
     {
-        return $this->isSameOrganizationAndAllowedBranch($user, $intakeRequest) && ! $user->isViewer();
+        return $this->isSameOrganizationAndAllowedBranch($user, $intakeRequest)
+            && ! $user->isViewer()
+            && ! $intakeRequest->isInClosedDay();
     }
 
     private function isEditable(IntakeRequest $intakeRequest): bool

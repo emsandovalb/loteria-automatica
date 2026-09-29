@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Draw;
 use App\Models\IncomingMessage;
 use App\Models\IntakeRequest;
+use App\Models\NumberLimit;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -152,6 +153,47 @@ class IntakeRequestManagementTest extends TestCase
         ]);
     }
 
+    public function test_editing_request_to_restricted_number_forces_needs_review(): void
+    {
+        [$owner, $branchOne, $branchTwo, $request] = $this->makeOrganizationWithUsersAndRequest(status: IntakeRequest::STATUS_PENDING);
+        $draw = Draw::query()->where('organization_id', $owner->organization_id)->where('name', '5:00 pm')->firstOrFail();
+
+        NumberLimit::create([
+            'organization_id' => $owner->organization_id,
+            'branch_id' => $branchTwo->id,
+            'draw_id' => $draw->id,
+            'number' => '29',
+            'max_amount' => 1000,
+            'is_restricted' => true,
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Restricted for review',
+            'requires_manual_review' => false,
+            'is_blocked' => false,
+        ]);
+
+        $this->actingAs($owner)->patch(route('intake-requests.update', $request), [
+            'draw_id' => $draw->id,
+            'detected_number' => '29',
+            'detected_amount' => 1250,
+            'notes' => 'Edited after review.',
+        ])->assertRedirect(route('intake-requests.index'));
+
+        $this->assertDatabaseHas('requests', [
+            'id' => $request->id,
+            'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+            'detected_number' => '29',
+            'detected_amount' => 1250,
+            'notes' => 'Number is restricted for this draw. Manual review required.',
+            'draw_id' => $draw->id,
+        ]);
+
+        $this->assertDatabaseHas('intake_request_events', [
+            'intake_request_id' => $request->id,
+            'event_type' => IntakeRequest::EVENT_STATUS_CHANGED,
+            'notes' => 'Number is restricted for this draw. Manual review required.',
+        ]);
+    }
+
     public function test_requests_can_be_filtered_by_draw(): void
     {
         [$owner, $branchOne, $branchTwo, $request] = $this->makeOrganizationWithUsersAndRequest();
@@ -184,7 +226,7 @@ class IntakeRequestManagementTest extends TestCase
         $this->actingAs($owner)->get(route('intake-requests.index', ['draw_id' => $drawId]))
             ->assertOk()
             ->assertSeeText('12:00 md')
-            ->assertDontSeeText('44');
+            ->assertDontSeeText('500 al 44 7pm');
     }
 
     public function test_draw_badge_appears_in_request_list(): void

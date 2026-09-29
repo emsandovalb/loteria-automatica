@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['organization_id', 'branch_id', 'role', 'name', 'email', 'password'])]
+#[Fillable(['organization_id', 'branch_id', 'role', 'is_active', 'name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -24,6 +24,10 @@ class User extends Authenticatable
     public const ROLE_SELLER = 'seller';
     public const ROLE_VIEWER = 'viewer';
 
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -34,6 +38,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -65,6 +70,20 @@ class User extends Authenticatable
     public function isViewer(): bool
     {
         return $this->role === self::ROLE_VIEWER;
+    }
+
+    /**
+     * Roles this user may give to other users. Owners manage admins; admins manage branch staff.
+     *
+     * @return array<int, string>
+     */
+    public function assignableRoles(): array
+    {
+        return match (true) {
+            $this->isOwner() => [self::ROLE_ADMIN, self::ROLE_SELLER, self::ROLE_VIEWER],
+            $this->isAdmin() => [self::ROLE_SELLER, self::ROLE_VIEWER],
+            default => [],
+        };
     }
 
     public function canViewAllBranches(): bool

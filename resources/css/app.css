@@ -114,6 +114,661 @@
     .brand-badge {
         @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
     }
+
+    .login-stage {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        background: #eff6ff;
+    }
+
+    .login-bg-photo {
+        position: absolute;
+        inset: -4%;
+        background-image: url('/images/login-background.webp');
+        background-size: cover;
+        background-position: center;
+        filter: blur(18px) saturate(1.05);
+        opacity: 0.22;
+        transform: scale(1.08);
+    }
+
+    .login-wash {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 7% 45%, rgba(101, 153, 226, 0.42), transparent 31%),
+            radial-gradient(circle at 92% 26%, rgba(252, 203, 107, 0.45), transparent 32%),
+            radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.52) 38%, transparent 66%),
+            linear-gradient(103deg, rgba(116, 171, 237, 0.82) 0%, rgba(231, 241, 255, 0.9) 31%, rgba(255, 255, 255, 0.82) 55%, rgba(255, 224, 166, 0.78) 100%);
+    }
+
+    .login-lines {
+        position: absolute;
+        inset: 0;
+        opacity: 0.5;
+        background:
+            radial-gradient(ellipse at 32% 0%, transparent 0 35%, rgba(255, 255, 255, 0.75) 35.2%, transparent 35.6%),
+            radial-gradient(ellipse at 7% 31%, transparent 0 35%, rgba(255, 255, 255, 0.55) 35.2%, transparent 35.5%),
+            radial-gradient(ellipse at 96% 67%, transparent 0 41%, rgba(255, 255, 255, 0.55) 41.2%, transparent 41.5%);
+    }
+
+    .login-ball {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background:
+            radial-gradient(circle at 68% 26%, rgba(255, 255, 255, 0.95), rgba(225, 234, 250, 0.82) 32%, rgba(155, 178, 217, 0.52) 76%),
+            #dbe7fb;
+        color: rgba(38, 59, 101, 0.38);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0;
+        box-shadow: inset -24px -30px 52px rgba(73, 104, 157, 0.18), 0 24px 60px rgba(38, 75, 133, 0.16);
+        pointer-events: none;
+    }
+
+    .login-ball-15 {
+        left: 2.4%;
+        top: -4.5%;
+        width: 205px;
+        height: 205px;
+        filter: blur(4px);
+        font-size: 72px;
+        transform: rotate(12deg);
+    }
+
+    .login-ball-68 {
+        left: -3.5%;
+        top: 38%;
+        width: 245px;
+        height: 245px;
+        filter: blur(2.5px);
+        font-size: 88px;
+        transform: rotate(4deg);
+    }
+
+    .login-ball-89 {
+        right: 3%;
+        top: 6%;
+        width: 166px;
+        height: 166px;
+        filter: blur(5px);
+        font-size: 66px;
+        transform: rotate(-15deg);
+    }
+
+    .login-ball-28 {
+        right: -3.4%;
+        bottom: -4%;
+        width: 270px;
+        height: 270px;
+        filter: blur(4px);
+        font-size: 118px;
+        transform: rotate(22deg);
+    }
+
+    .login-dots {
+        position: absolute;
+        width: 95px;
+        height: 95px;
+        opacity: 0.72;
+        background-image: radial-gradient(circle, rgba(255, 255, 255, 0.96) 2px, transparent 2.5px);
+        background-size: 22px 22px;
+        pointer-events: none;
+    }
+
+    .login-dots-top {
+        left: 26%;
+        top: 8%;
+    }
+
+    .login-dots-left {
+        left: 7%;
+        bottom: 24%;
+    }
+
+    .login-dots-right {
+        right: 2%;
+        top: 27%;
+    }
+
+    .login-panel {
+        border: 1px solid rgba(186, 199, 219, 0.72);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.58);
+        box-shadow: 0 22px 48px -30px rgba(16, 46, 95, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+        backdrop-filter: blur(22px);
+    }
+
+    .login-feature {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 18px;
+        color: var(--brand-navy);
+    }
+
+    .login-feature-icon,
+    .login-draw-icon,
+    .login-stat-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 18px;
+    }
+
+    .login-feature-icon {
+        width: 58px;
+        height: 58px;
+        border: 1px solid rgba(194, 209, 231, 0.58);
+        background: rgba(229, 239, 255, 0.64);
+        color: #005fd3;
+        box-shadow: 0 12px 26px rgba(36, 77, 145, 0.08);
+    }
+
+    .login-draw-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 86px;
+        border: 1px solid rgba(218, 226, 238, 0.9);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.68);
+        padding: 14px 16px;
+        box-shadow: 0 10px 25px rgba(23, 48, 86, 0.08);
+    }
+
+    .login-draw-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 246, 229, 0.95);
+    }
+
+    .login-status-open,
+    .login-status-closed {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .login-status-open {
+        background: #d9f7e7;
+        color: #087a43;
+    }
+
+    .login-status-open::before {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: #10b981;
+    }
+
+    .login-status-closed {
+        background: #e8edf5;
+        color: #52617c;
+    }
+
+    .login-status-closed::before {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: #a7b3c7;
+    }
+
+    .login-submit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        width: 100%;
+        min-height: 52px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #004bb7, #005ed7);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 16px 26px -16px rgba(0, 72, 178, 0.9);
+        transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .login-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 19px 30px -17px rgba(0, 72, 178, 0.95);
+    }
+
+    .login-submit-icon {
+        position: absolute;
+        right: 13px;
+        display: flex;
+        width: 34px;
+        height: 34px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .login-stats {
+        z-index: 10;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: min(980px, 78vw);
+        margin: -18px auto 12px;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.54);
+        box-shadow: 0 18px 42px -28px rgba(16, 46, 95, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(24px);
+    }
+
+    .login-stat-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-height: 96px;
+        border-right: 1px solid rgba(198, 211, 229, 0.66);
+        padding: 16px 34px;
+        color: var(--brand-navy);
+    }
+
+    .login-stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 999px;
+    }
+
+    .icon-paper-plane,
+    .icon-shield,
+    .icon-bars,
+    .icon-lock,
+    .icon-lock-small,
+    .icon-mail,
+    .icon-eye,
+    .icon-arrow-right,
+    .icon-broadcast,
+    .icon-sun,
+    .icon-moon,
+    .icon-clock,
+    .icon-chevron-right,
+    .icon-users,
+    .icon-ticket,
+    .icon-coins {
+        position: relative;
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        color: currentColor;
+    }
+
+    .icon-paper-plane {
+        border: 2px solid currentColor;
+        border-left-color: transparent;
+        border-bottom-color: transparent;
+        transform: rotate(45deg) skew(-7deg, -7deg);
+    }
+
+    .icon-paper-plane::after {
+        content: '';
+        position: absolute;
+        left: 3px;
+        top: 9px;
+        width: 12px;
+        height: 2px;
+        background: currentColor;
+        transform: rotate(-45deg);
+    }
+
+    .icon-shield {
+        width: 21px;
+        height: 23px;
+        border: 2px solid currentColor;
+        border-radius: 11px 11px 14px 14px;
+        clip-path: polygon(50% 0, 96% 15%, 88% 70%, 50% 100%, 12% 70%, 4% 15%);
+    }
+
+    .icon-bars {
+        width: 24px;
+        height: 24px;
+    }
+
+    .icon-bars::before,
+    .icon-bars::after,
+    .icon-bars {
+        background: linear-gradient(currentColor 0 0) 3px 9px / 4px 12px no-repeat,
+            linear-gradient(currentColor 0 0) 10px 4px / 4px 17px no-repeat,
+            linear-gradient(currentColor 0 0) 17px 12px / 4px 9px no-repeat;
+        border-radius: 5px;
+    }
+
+    .icon-bars::before,
+    .icon-bars::after {
+        content: '';
+        position: absolute;
+        display: none;
+    }
+
+    .icon-lock,
+    .icon-lock-small {
+        border: 2px solid currentColor;
+        border-radius: 4px;
+        width: 18px;
+        height: 16px;
+        margin-top: 6px;
+    }
+
+    .icon-lock::before,
+    .icon-lock-small::before {
+        content: '';
+        position: absolute;
+        left: 3px;
+        top: -9px;
+        width: 12px;
+        height: 12px;
+        border: 2px solid currentColor;
+        border-bottom: 0;
+        border-radius: 9px 9px 0 0;
+    }
+
+    .icon-lock-small {
+        width: 16px;
+        height: 14px;
+    }
+
+    .icon-mail {
+        width: 18px;
+        height: 14px;
+        border: 2px solid currentColor;
+        border-radius: 3px;
+    }
+
+    .icon-mail::before,
+    .icon-mail::after {
+        content: '';
+        position: absolute;
+        top: 1px;
+        width: 10px;
+        height: 2px;
+        background: currentColor;
+    }
+
+    .icon-mail::before {
+        left: -1px;
+        transform: rotate(38deg);
+        transform-origin: left center;
+    }
+
+    .icon-mail::after {
+        right: -1px;
+        transform: rotate(-38deg);
+        transform-origin: right center;
+    }
+
+    .icon-eye {
+        width: 20px;
+        height: 12px;
+        border: 2px solid currentColor;
+        border-radius: 100% 100% 100% 100%;
+    }
+
+    .icon-eye::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: currentColor;
+        transform: translate(-50%, -50%);
+    }
+
+    .icon-arrow-right,
+    .icon-chevron-right {
+        width: 17px;
+        height: 17px;
+        border-top: 2px solid currentColor;
+        border-right: 2px solid currentColor;
+        transform: rotate(45deg);
+    }
+
+    .icon-arrow-right::before {
+        content: '';
+        position: absolute;
+        right: -1px;
+        top: -2px;
+        width: 13px;
+        height: 2px;
+        background: currentColor;
+        transform: rotate(-45deg);
+        transform-origin: right center;
+    }
+
+    .icon-chevron-right {
+        width: 9px;
+        height: 9px;
+    }
+
+    .icon-broadcast::before,
+    .icon-broadcast::after {
+        content: '';
+        position: absolute;
+        inset: 4px;
+        border: 2px solid currentColor;
+        border-radius: 999px;
+        clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+    }
+
+    .icon-broadcast::after {
+        inset: 0;
+    }
+
+    .icon-broadcast {
+        border-radius: 999px;
+    }
+
+    .icon-broadcast {
+        background: radial-gradient(circle, currentColor 0 2px, transparent 2.5px);
+    }
+
+    .icon-sun {
+        width: 22px;
+        height: 22px;
+        background:
+            radial-gradient(circle, transparent 0 4px, currentColor 4px 6px, transparent 6.5px),
+            linear-gradient(currentColor 0 0) center 0 / 2px 5px no-repeat,
+            linear-gradient(currentColor 0 0) center 100% / 2px 5px no-repeat,
+            linear-gradient(currentColor 0 0) 0 center / 5px 2px no-repeat,
+            linear-gradient(currentColor 0 0) 100% center / 5px 2px no-repeat;
+    }
+
+    .icon-sun::before,
+    .icon-sun::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(currentColor 0 0) center 0 / 2px 5px no-repeat,
+            linear-gradient(currentColor 0 0) center 100% / 2px 5px no-repeat;
+        transform: rotate(45deg);
+    }
+
+    .icon-sun::after {
+        transform: rotate(-45deg);
+    }
+
+    .icon-moon {
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        box-shadow: inset 6px -2px 0 0 currentColor;
+    }
+
+    .icon-clock {
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-radius: 999px;
+    }
+
+    .icon-clock::before,
+    .icon-clock::after {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 3px;
+        width: 2px;
+        height: 5px;
+        background: currentColor;
+        border-radius: 3px;
+    }
+
+    .icon-clock::after {
+        top: 7px;
+        width: 5px;
+        height: 2px;
+    }
+
+    .icon-users::before,
+    .icon-users::after {
+        content: '';
+        position: absolute;
+        border: 2px solid currentColor;
+    }
+
+    .icon-users::before {
+        left: 7px;
+        top: 2px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+    }
+
+    .icon-users::after {
+        left: 4px;
+        bottom: 2px;
+        width: 14px;
+        height: 9px;
+        border-radius: 10px 10px 0 0;
+        border-bottom: 0;
+    }
+
+    .icon-ticket {
+        width: 20px;
+        height: 14px;
+        border: 2px solid currentColor;
+        border-radius: 4px;
+        transform: rotate(-35deg);
+    }
+
+    .icon-ticket::before,
+    .icon-ticket::after {
+        content: '';
+        position: absolute;
+        top: 4px;
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: currentColor;
+    }
+
+    .icon-ticket::before {
+        left: -4px;
+    }
+
+    .icon-ticket::after {
+        right: -4px;
+    }
+
+    .icon-coins,
+    .icon-coins::before,
+    .icon-coins::after {
+        width: 20px;
+        height: 9px;
+        border: 2px solid currentColor;
+        border-radius: 999px;
+    }
+
+    .icon-coins::before,
+    .icon-coins::after {
+        content: '';
+        position: absolute;
+        left: -2px;
+    }
+
+    .icon-coins::before {
+        top: 6px;
+    }
+
+    .icon-coins::after {
+        top: 13px;
+    }
+
+    @media (max-width: 1180px) {
+        .login-stats {
+            width: min(100%, 900px);
+            margin-top: 26px;
+        }
+
+        .login-stat-item {
+            padding: 16px 22px;
+        }
+    }
+
+    @media (max-width: 1023px) {
+        .login-ball-89,
+        .login-ball-28 {
+            opacity: 0.42;
+        }
+
+        .login-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .login-stat-item:nth-child(2) {
+            border-right: 0;
+        }
+
+        .login-stat-item:nth-child(-n + 2) {
+            border-bottom: 1px solid rgba(198, 211, 229, 0.66);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .login-ball {
+            opacity: 0.24;
+        }
+
+        .login-panel {
+            border-radius: 16px;
+        }
+
+        .login-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .login-stat-item,
+        .login-stat-item:nth-child(2),
+        .login-stat-item:nth-child(-n + 2) {
+            border-right: 0;
+            border-bottom: 1px solid rgba(198, 211, 229, 0.66);
+            padding: 16px 20px;
+        }
+
+        .login-stat-item:last-child {
+            border-bottom: 0;
+        }
+    }
 }
 
 [x-cloak] {

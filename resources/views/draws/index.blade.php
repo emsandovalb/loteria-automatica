@@ -2,9 +2,9 @@
     <div class="space-y-6">
         <div class="flex items-start justify-between gap-4">
             <div>
-                <div class="brand-badge bg-brand-primary/10 text-brand-primary">Draw settings</div>
-                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-brand-navy">Draws</h1>
-                <p class="mt-1 text-sm text-slate-600">Review draw schedules and intake closing rules.</p>
+                <div class="brand-badge bg-brand-primary/10 text-brand-primary">{{ __('Draw settings') }}</div>
+                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-brand-navy">{{ __('Draws') }}</h1>
+                <p class="mt-1 text-sm text-slate-600">{{ __('Review draw schedules and intake closing rules.') }}</p>
             </div>
             @if (session('status'))
                 <div class="rounded-2xl border border-brand-success/20 bg-green-50 px-4 py-3 text-sm text-green-800 shadow-sm">
@@ -17,13 +17,13 @@
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Draw time</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Close time</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Cutoff</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Intake</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Name') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Draw time') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Close time') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Cutoff') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Intake') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Status') }}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 bg-white">
@@ -54,15 +54,15 @@
                             </td>
                             <td class="px-4 py-3 text-sm">
                                 @can('update', $draw)
-                                    <a href="{{ route('draws.edit', $draw) }}" class="brand-btn-secondary px-3 py-1.5 text-xs">Edit</a>
+                                    <a href="{{ route('draws.edit', $draw) }}" class="brand-btn-secondary px-3 py-1.5 text-xs">{{ __('Edit') }}</a>
                                 @else
-                                    <span class="text-sm text-slate-400">View only</span>
+                                    <span class="text-sm text-slate-400">{{ __('View only') }}</span>
                                 @endcan
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">No draws available for this account.</td>
+                            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">{{ __('No draws available for this account.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

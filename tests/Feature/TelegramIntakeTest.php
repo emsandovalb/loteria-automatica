@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Draw;
 use App\Models\IncomingMessage;
 use App\Models\IntakeRequest;
+use App\Models\NumberLimit;
 use App\Models\MessageResponse;
 use App\Models\Organization;
 use App\Models\User;
@@ -92,13 +93,89 @@ class TelegramIntakeTest extends TestCase
         Http::assertSent(function ($request): bool {
             return str_contains($request->url(), '/sendMessage')
                 && $request->data()['chat_id'] === '4002'
-                && str_contains($request->data()['text'], 'Sorteo 5:00 pm');
+            && str_contains($request->data()['text'], 'Sorteo 5:00 pm');
         });
 
         $this->assertStringContainsString(
             'Processed 1 message(s); skipped 0 duplicate update(s).',
             Artisan::output(),
         );
+    }
+
+    public function test_telegram_restricted_intake_creates_needs_review_request(): void
+    {
+        [, $branch] = $this->makeOrgWithTelegramBranchAndOwner();
+        $draw = Draw::query()->where('organization_id', $branch->organization_id)->where('name', '2:00 pm')->firstOrFail();
+
+        NumberLimit::create([
+            'organization_id' => $branch->organization_id,
+            'branch_id' => $branch->id,
+            'draw_id' => $draw->id,
+            'number' => '29',
+            'max_amount' => 1000,
+            'is_restricted' => true,
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Restricted for review',
+            'requires_manual_review' => false,
+            'is_blocked' => false,
+        ]);
+
+        $update = $this->telegramUpdate(9002, 4002, '1000 al 29 2pm', 'jose', 'Jose');
+
+        $this->configureTelegram(enabled: true, branchId: $branch->id);
+        Http::fake($this->telegramResponses([$update]));
+
+        Artisan::call('telegram:poll');
+
+        $this->assertDatabaseHas('requests', [
+            'branch_id' => $branch->id,
+            'raw_text' => '1000 al 29 2pm',
+            'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+            'detected_amount' => 1000,
+            'detected_number' => '29',
+            'notes' => 'Number is restricted for this draw. Manual review required.',
+        ]);
+
+        Http::assertSent(function ($request): bool {
+            return str_contains($request->url(), '/sendMessage')
+                && $request->data()['chat_id'] === '4002'
+                && str_contains($request->data()['text'], 'revisi');
+        });
+    }
+
+    public function test_telegram_blocked_intake_creates_needs_review_request(): void
+    {
+        [, $branch] = $this->makeOrgWithTelegramBranchAndOwner();
+        $draw = Draw::query()->where('organization_id', $branch->organization_id)->where('name', '2:00 pm')->firstOrFail();
+
+        NumberLimit::create([
+            'organization_id' => $branch->organization_id,
+            'branch_id' => $branch->id,
+            'draw_id' => $draw->id,
+            'number' => '28',
+            'max_amount' => 1000,
+            'is_restricted' => true,
+            'restriction_type' => 'blocked',
+            'restriction_reason' => 'Blocked for review',
+            'requires_manual_review' => false,
+            'is_blocked' => true,
+        ]);
+
+        $update = $this->telegramUpdate(9008, 4008, '1000 al 28 2pm', 'jose', 'Jose');
+
+        $this->configureTelegram(enabled: true, branchId: $branch->id);
+        Http::fake($this->telegramResponses([$update]));
+
+        Artisan::call('telegram:poll');
+
+        $this->assertDatabaseHas('requests', [
+            'branch_id' => $branch->id,
+            'raw_text' => '1000 al 28 2pm',
+            'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+            'detected_amount' => 1000,
+            'detected_number' => '28',
+            'notes' => 'Number is blocked for this draw. Manual review required.',
+        ]);
     }
 
     public function test_generated_confirmation_response_is_stored(): void

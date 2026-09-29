@@ -52,7 +52,7 @@ class SimulatorController extends Controller
 
         if ($duplicateExists) {
             throw ValidationException::withMessages([
-                'raw_message' => 'This intake message was already submitted.',
+                'raw_message' => __('This intake message was already submitted.'),
             ]);
         }
 

@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\BranchDailyClosure;
 use App\Models\IntakeRequest;
+use App\Models\PrizePayout;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -174,14 +176,14 @@ class BranchDailyClosureController extends Controller
 
         if ($alreadyClosed) {
             throw ValidationException::withMessages([
-                'closure_date' => 'This branch already has a closure for the selected date.',
+                'closure_date' => __('This branch already has a closure for the selected date.'),
             ]);
         }
 
         $requestScope = IntakeRequest::query()
             ->where('organization_id', $branch->organization_id)
             ->where('branch_id', $branch->id)
-            ->whereDate('created_at', $closureDate);
+            ->whereDate('draw_date', $closureDate);
 
         $closure = BranchDailyClosure::create([
             'organization_id' => $branch->organization_id,
@@ -194,21 +196,27 @@ class BranchDailyClosureController extends Controller
             'total_pending' => (int) (clone $requestScope)->where('status', IntakeRequest::STATUS_PENDING)->count(),
             'total_amount_confirmed' => (float) (clone $requestScope)
                 ->where('status', IntakeRequest::STATUS_CONFIRMED)
-                ->sum('detected_amount'),
+                ->sum(DB::raw('detected_amount + COALESCE(reventado_amount, 0)')),
+            'total_prizes_amount' => (float) PrizePayout::query()
+                ->where('branch_id', $branch->id)
+                ->whereHas('drawResult', fn ($query) => $query->whereDate('draw_date', $closureDate))
+                ->sum('total_prize'),
             'notes' => $validated['notes'] ?? null,
             'closed_at' => now(),
         ]);
 
         return redirect()
             ->route('closures.index')
-            ->with('status', sprintf(
-                'Day closed for %s on %s. Requests: %d, confirmed: %d, rejected: %d, pending: %d.',
-                $branch->name,
-                $closureDate,
-                $closure->total_requests,
-                $closure->total_confirmed,
-                $closure->total_rejected,
-                $closure->total_pending,
+            ->with('status', __(
+                'Day closed for :branch on :date. Requests: :requests, confirmed: :confirmed, rejected: :rejected, pending: :pending.',
+                [
+                    'branch' => $branch->name,
+                    'date' => $closureDate,
+                    'requests' => $closure->total_requests,
+                    'confirmed' => $closure->total_confirmed,
+                    'rejected' => $closure->total_rejected,
+                    'pending' => $closure->total_pending,
+                ],
             ));
     }
 
@@ -218,7 +226,7 @@ class BranchDailyClosureController extends Controller
             ->with('customer')
             ->where('organization_id', $closure->organization_id)
             ->where('branch_id', $closure->branch_id)
-            ->whereDate('created_at', $closure->closure_date)
+            ->whereDate('draw_date', $closure->closure_date)
             ->orderBy('created_at')
             ->get();
     }

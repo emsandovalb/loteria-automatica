@@ -159,8 +159,8 @@ class NumberLimitController extends Controller
                     'draw_id' => $draw->id,
                 ])
                 ->with('status', $validated['apply_to'] === 'missing'
-                    ? sprintf('Applied limit to %d numbers without existing limits.', $applied)
-                    : 'Applied limit to all numbers 00-99.');
+                    ? __('Applied limit to :count numbers without existing limits.', ['count' => $applied])
+                    : __('Applied limit to all numbers 00-99.'));
         }
 
         $validated = $request->validate([
@@ -201,7 +201,7 @@ class NumberLimitController extends Controller
                 'draw_id' => $draw->id,
                 'number' => $number,
             ])
-            ->with('status', sprintf('Limit created for %s.', $number));
+            ->with('status', __('Limit created for :number.', ['number' => $number]));
     }
 
     public function edit(NumberLimit $limit, Request $request): View
@@ -267,7 +267,7 @@ class NumberLimitController extends Controller
                 'draw_id' => $limit->draw_id,
                 'number' => $limit->number,
             ])
-            ->with('status', sprintf('Limit updated for %s.', $limit->number));
+            ->with('status', __('Limit updated for :number.', ['number' => $limit->number]));
     }
 
     public function destroy(NumberLimit $limit): RedirectResponse
@@ -286,7 +286,7 @@ class NumberLimitController extends Controller
                 'draw_id' => $drawId,
                 'number' => $number,
             ])
-            ->with('status', sprintf('Limit deleted for %s.', $number));
+            ->with('status', __('Limit deleted for :number.', ['number' => $number]));
     }
 
     private function visibleBranches(?\App\Models\User $user)

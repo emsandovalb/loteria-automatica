@@ -42,4 +42,9 @@ return [
         'verify_ssl' => (bool) env('TELEGRAM_VERIFY_SSL', true),
     ],
 
+    'customer_replies' => [
+        // How long after an operator's question the customer's next message counts as the answer.
+        'window_hours' => (int) env('CUSTOMER_REPLY_WINDOW_HOURS', 6),
+    ],
+
 ];

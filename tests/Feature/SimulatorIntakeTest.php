@@ -246,6 +246,46 @@ class SimulatorIntakeTest extends TestCase
         ]);
     }
 
+    public function test_restricted_number_updates_customer_response_to_manual_review(): void
+    {
+        [$user, $branch] = $this->makeOrgWithBranchAndOwner();
+        $draw = Draw::query()->where('organization_id', $user->organization_id)->where('name', '2:00 pm')->firstOrFail();
+
+        NumberLimit::create([
+            'organization_id' => $user->organization_id,
+            'branch_id' => $branch->id,
+            'draw_id' => $draw->id,
+            'number' => '29',
+            'max_amount' => 1000,
+            'is_restricted' => true,
+            'restriction_type' => 'restricted',
+            'restriction_reason' => 'Restricted for review',
+            'requires_manual_review' => false,
+            'is_blocked' => false,
+        ]);
+
+        $this->actingAs($user)->post(route('simulator.store'), [
+            'branch_id' => $branch->id,
+            'customer_phone' => '+50255510014',
+            'customer_name' => 'Restricted Customer',
+            'raw_message' => '1000 al 29 2pm',
+        ])->assertRedirect(route('simulator.index'));
+
+        $response = MessageResponse::query()->firstOrFail();
+
+        $this->assertSame('manual_review', $response->response_type);
+        $this->assertDatabaseHas('requests', [
+            'organization_id' => $user->organization_id,
+            'branch_id' => $branch->id,
+            'raw_text' => '1000 al 29 2pm',
+            'status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+            'draw_id' => $draw->id,
+            'detected_amount' => 1000,
+            'detected_number' => '29',
+            'notes' => 'Number is restricted for this draw. Manual review required.',
+        ]);
+    }
+
     public function test_draw_assignment_works_for_two_pm_and_twelve_md(): void
     {
         [$user, $branch] = $this->makeOrgWithBranchAndOwner();

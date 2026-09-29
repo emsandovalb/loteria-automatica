@@ -53,7 +53,12 @@
                             ['label' => 'Operator Guide', 'href' => 'pilot.guide', 'active' => 'pilot.guide', 'icon' => 'M5 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm14 0h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z'],
                             ['label' => 'Incoming Messages', 'href' => 'incoming-messages.index', 'active' => 'incoming-messages.*', 'icon' => 'M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z'],
                             ['label' => 'Requests', 'href' => 'intake-requests.index', 'active' => 'intake-requests.*', 'icon' => 'M4 6a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Zm4 5h8M8 15h5'],
+                            ['label' => 'Results', 'href' => 'results.index', 'active' => 'results.*', 'icon' => 'M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z'],
+                            ['label' => 'Prizes', 'href' => 'payouts.index', 'active' => 'payouts.*', 'icon' => 'M3 7h18v10H3V7Zm9 2.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM6 10v4M18 10v4'],
+                            ['label' => 'Settlement', 'href' => 'settlement.index', 'active' => 'settlement.*', 'icon' => 'M4 20V10M10 20V4M16 20v-7M22 20H2'],
+                            ['label' => 'Users', 'href' => 'users.index', 'active' => 'users.*', 'can' => ['viewAny', \App\Models\User::class], 'icon' => 'M16 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm13 9v-1a4 4 0 0 0-3-3.87M16 4.13a3 3 0 0 1 0 5.74'],
                         ] as $item)
+                            @continue(isset($item['can']) && ! auth()->user()->can(...$item['can']))
                             <a
                                 href="{{ route($item['href']) }}"
                                 class="group relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition"
@@ -65,7 +70,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5 shrink-0 transition-colors {{ request()->routeIs($item['active']) ? 'text-brand-gold' : 'text-white/75 group-hover:text-white' }}" aria-hidden="true">
                                     <path d="{{ $item['icon'] }}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                                <span>{{ $item['label'] }}</span>
+                                <span>{{ __($item['label']) }}</span>
                                 @if (request()->routeIs($item['active']))
                                     <span class="absolute inset-y-0 right-0 w-1 rounded-l-full bg-brand-gold"></span>
                                 @endif
@@ -78,13 +83,13 @@
                             <div class="text-sm font-semibold text-white">{{ auth()->user()->name }}</div>
                             <div class="text-xs text-white/70">{{ auth()->user()->email }}</div>
                             <div class="mt-3 flex items-center gap-2 text-xs text-white/70">
-                                <span class="brand-badge bg-brand-gold/15 text-brand-gold">Active</span>
-                                <span>{{ auth()->user()->role }}</span>
+                                <span class="brand-badge bg-brand-gold/15 text-brand-gold">{{ __('Active') }}</span>
+                                <span>{{ __(auth()->user()->role) }}</span>
                             </div>
                             <form method="POST" action="{{ route('logout') }}" class="mt-4">
                                 @csrf
                                 <button type="submit" class="brand-btn-secondary w-full border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
-                                    Log out
+                                    {{ __('Log out') }}
                                 </button>
                             </form>
                         </div>
@@ -96,27 +101,27 @@
                         <div class="flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
                             <div class="flex items-center gap-3">
                                 <button type="button" class="brand-btn-secondary lg:hidden" @click="sidebarOpen = true">
-                                    Menu
+                                    {{ __('Menu') }}
                                 </button>
                                 <div>
                                     <div class="text-sm font-semibold text-slate-900">{{ auth()->user()->name }}</div>
-                                    <div class="text-xs text-slate-500">{{ auth()->user()->role }}</div>
+                                    <div class="text-xs text-slate-500">{{ __(auth()->user()->role) }}</div>
                                 </div>
                             </div>
 
                             <div class="hidden items-center gap-3 sm:flex">
                                 <div class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
-                                    {{ now()->format('M d, Y') }}
+                                    {{ now()->translatedFormat('d M Y') }}
                                 </div>
                                 <a href="{{ route('numbers.index') }}" class="brand-btn-primary">
-                                    Open Numbers
+                                    {{ __('Open Numbers') }}
                                 </a>
                             </div>
                         </div>
                     </header>
 
                     <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-                        <div class="mx-auto w-full max-w-[1600px]">
+                        <div class="mx-auto w-full {{ request()->routeIs('numbers.*') ? 'max-w-none' : 'max-w-[1600px]' }}">
                             {{ $slot }}
                         </div>
                     </main>

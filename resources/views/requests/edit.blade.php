@@ -2,13 +2,19 @@
     <div class="space-y-6">
         <div class="flex items-start justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold text-slate-900">Edit Request</h1>
-                <p class="mt-1 text-sm text-slate-600">Update the detected fields before confirming.</p>
+                <h1 class="text-2xl font-semibold text-slate-900">{{ __('Edit Request') }}</h1>
+                <p class="mt-1 text-sm text-slate-600">{{ __('Update the detected fields before confirming.') }}</p>
             </div>
             <a href="{{ route('intake-requests.index') }}" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
-                Back to requests
+                {{ __('Back to requests') }}
             </a>
         </div>
+
+        @if (session('status'))
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-sm">
+                {{ session('status') }}
+            </div>
+        @endif
 
         <div class="grid gap-6 xl:grid-cols-3">
             <div class="xl:col-span-2 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -17,9 +23,9 @@
                     @method('PATCH')
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700" for="draw_id">Draw / schedule</label>
+                        <label class="block text-sm font-medium text-slate-700" for="draw_id">{{ __('Draw / schedule') }}</label>
                         <select id="draw_id" name="draw_id" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">
-                            <option value="">Select a draw</option>
+                            <option value="">{{ __('Select a draw') }}</option>
                             @foreach ($draws as $draw)
                                 <option value="{{ $draw->id }}" @selected(old('draw_id', $request->draw_id) == $draw->id)>{{ $draw->name }}</option>
                             @endforeach
@@ -28,26 +34,32 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700" for="detected_number">Detected number</label>
+                        <label class="block text-sm font-medium text-slate-700" for="detected_number">{{ __('Detected number') }}</label>
                         <input id="detected_number" name="detected_number" value="{{ old('detected_number', $request->detected_number) }}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="00">
                         @error('detected_number')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700" for="detected_amount">Detected amount</label>
+                        <label class="block text-sm font-medium text-slate-700" for="detected_amount">{{ __('Detected amount') }}</label>
                         <input id="detected_amount" name="detected_amount" type="number" step="0.01" min="0" value="{{ old('detected_amount', $request->detected_amount) }}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="1000">
                         @error('detected_amount')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700" for="notes">Notes</label>
+                        <label class="block text-sm font-medium text-slate-700" for="reventado_amount">{{ __('Reventado amount') }}</label>
+                        <input id="reventado_amount" name="reventado_amount" type="number" step="0.01" min="0" value="{{ old('reventado_amount', $request->reventado_amount) }}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500" placeholder="{{ __('Optional') }}">
+                        @error('reventado_amount')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700" for="notes">{{ __('Notes') }}</label>
                         <textarea id="notes" name="notes" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-slate-500 focus:ring-slate-500">{{ old('notes', $request->notes) }}</textarea>
                         @error('notes')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="flex items-center justify-end">
                         <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-                            Save changes
+                            {{ __('Save changes') }}
                         </button>
                     </div>
                 </form>
@@ -55,12 +67,12 @@
 
             <div class="space-y-4">
                 <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Request summary</h2>
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ __('Request summary') }}</h2>
                     <dl class="mt-3 space-y-2 text-sm text-slate-700">
-                        <div class="flex justify-between gap-4"><dt>Status</dt><dd>{{ $request->status }}</dd></div>
-                        <div class="flex justify-between gap-4"><dt>Branch</dt><dd>{{ $request->branch?->name ?? '-' }}</dd></div>
+                        <div class="flex justify-between gap-4"><dt>{{ __('Status') }}</dt><dd>{{ $request->status }}</dd></div>
+                        <div class="flex justify-between gap-4"><dt>{{ __('Branch') }}</dt><dd>{{ $request->branch?->name ?? '-' }}</dd></div>
                         <div class="space-y-1">
-                            <div class="flex justify-between gap-4"><dt>Draw</dt><dd>{{ $request->draw?->name ?? '-' }}</dd></div>
+                            <div class="flex justify-between gap-4"><dt>{{ __('Draw') }}</dt><dd>{{ $request->draw?->name ?? '-' }}</dd></div>
                             @if ($request->draw)
                                 <div class="text-right">
                                     <span class="brand-badge {{ $request->draw->isOpenForIntake() ? 'bg-green-100 text-green-800' : ($request->draw->closingReason() === 'manually_closed' ? 'bg-amber-100 text-amber-800' : ($request->draw->closingReason() === 'inactive' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-800')) }}">
@@ -69,11 +81,11 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="flex justify-between gap-4"><dt>Customer</dt><dd>{{ $request->customer?->phone ?? '-' }}</dd></div>
+                        <div class="flex justify-between gap-4"><dt>{{ __('Customer') }}</dt><dd>{{ $request->customer?->phone ?? '-' }}</dd></div>
                     </dl>
                 </div>
                 <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Raw text</h2>
+                    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">{{ __('Raw text') }}</h2>
                     <p class="mt-3 text-sm text-slate-700">{{ $request->raw_text }}</p>
                 </div>
             </div>

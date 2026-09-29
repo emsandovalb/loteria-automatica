@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Branch;
+use App\Models\BranchDailyClosure;
 use App\Models\Customer;
 use App\Models\Draw;
 use App\Models\IncomingMessage;
@@ -72,6 +73,11 @@ class IntakeMessageService
             $drawReference = $parserResult['draw_reference'] ?? null;
             $resolvedDraw = $this->resolveDraw($user, $drawReference);
             $drawClosed = $resolvedDraw !== null && ! $resolvedDraw->isOpenForIntake();
+            // Once the branch closed its day, new orders for that day are rejected, never parked for review.
+            $dayClosed = BranchDailyClosure::query()
+                ->where('branch_id', $branch->id)
+                ->whereDate('closure_date', $resolvedDraw?->operatingDate() ?? now()->toDateString())
+                ->exists();
 
             $parserResult['resolved_draw'] = $resolvedDraw ? [
                 'id' => $resolvedDraw->id,
@@ -111,9 +117,10 @@ class IntakeMessageService
                 $draw = $resolvedDraw;
                 $detectedNumber = $item['detected_number'] ?? null;
                 $detectedAmount = $item['detected_amount'] ?? null;
+                $reventadoAmount = $item['reventado_amount'] ?? null;
                 $notes = $requestReason;
                 $itemNeedsReview = (bool) ($parserResult['needs_review'] ?? true) || count($requestItems) > 1;
-                $decision = null;
+                $evaluation = null;
 
                 if ($drawClosed) {
                     $itemNeedsReview = true;
@@ -132,7 +139,7 @@ class IntakeMessageService
                 }
 
                 if (! $drawClosed && $draw !== null && $detectedNumber !== null && $detectedAmount !== null) {
-                    $decision = $this->numberLimitService->requestDecisionForAmount(
+                    $evaluation = $this->numberLimitService->evaluateRequestForAmount(
                         $user->organization,
                         $branch,
                         $draw,
@@ -140,20 +147,30 @@ class IntakeMessageService
                         (float) $detectedAmount,
                     );
 
-                    if ($decision['warning'] !== null) {
+                    if ($evaluation['final_status'] === IntakeRequest::STATUS_NEEDS_REVIEW && $evaluation['note'] !== null) {
                         $itemNeedsReview = true;
-                        if (in_array($decision['reason'], ['blocked', 'manual_review'], true)) {
-                            $notes = $decision['notes'];
+                        if (in_array($evaluation['reason'], ['blocked', 'manual_review'], true)) {
+                            $notes = $evaluation['note'];
                             $customerReviewNotice ??= 'Esta solicitud requiere revisión manual antes de confirmarse.';
                         } else {
-                            $notes = trim(implode(' ', array_filter([$notes, $decision['warning']])));
+                            $notes = trim(implode(' ', array_filter([$notes, $evaluation['note']])));
                         }
                     }
+                }
+
+                if ($reventadoAmount !== null && $draw !== null && ! $draw->offersReventado()) {
+                    $itemNeedsReview = true;
+                    $notes = trim(implode(' ', array_filter([$notes, 'This draw does not offer reventado. Manual review required.'])));
                 }
 
                 $requestStatus = $itemNeedsReview
                     ? IntakeRequest::STATUS_NEEDS_REVIEW
                     : IntakeRequest::STATUS_PENDING;
+
+                if ($dayClosed) {
+                    $requestStatus = IntakeRequest::STATUS_REJECTED;
+                    $notes = 'Branch day is already closed. Rejected automatically.';
+                }
 
                 $request = IntakeRequest::create([
                     'organization_id' => $user->organization_id,
@@ -163,12 +180,13 @@ class IntakeMessageService
                     'incoming_message_id' => $incomingMessage->id,
                     'detected_number' => $detectedNumber,
                     'detected_amount' => $detectedAmount,
+                    'reventado_amount' => $reventadoAmount,
                     'raw_text' => $rawText,
                     'status' => $requestStatus,
                     'confirmed_by' => null,
                     'confirmed_at' => null,
                     'rejected_by' => null,
-                    'rejected_at' => null,
+                    'rejected_at' => $dayClosed ? now() : null,
                     'notes' => $notes,
                 ]);
 
@@ -192,7 +210,16 @@ class IntakeMessageService
                 $requests[] = $request;
             }
 
-            if ($customerReviewNotice !== null) {
+            if ($dayClosed) {
+                $responseText = implode("\n\n", [
+                    'Las ventas de hoy ya cerraron en esta sucursal.',
+                    'Tu pedido no fue registrado. Por favor envíalo de nuevo mañana.',
+                ]);
+                $messageResponse->update([
+                    'response_type' => CustomerConfirmationMessageService::TYPE_DAY_CLOSED,
+                    'response_text' => $responseText,
+                ]);
+            } elseif ($customerReviewNotice !== null) {
                 $responseText = $this->customerConfirmationMessageService->generate(
                     $rawText,
                     $parserResult,
@@ -218,12 +245,20 @@ class IntakeMessageService
 
     private function resolveDraw(User $user, ?string $drawReference): ?Draw
     {
-        if ($drawReference === null || $user->organization_id === null) {
+        return $this->resolveDrawForOrganization($user->organization_id, $drawReference);
+    }
+
+    /**
+     * Matches a parsed draw reference (e.g. "5:00 pm") to one of the organization's active draws.
+     */
+    public function resolveDrawForOrganization(?int $organizationId, ?string $drawReference): ?Draw
+    {
+        if ($drawReference === null || $organizationId === null) {
             return null;
         }
 
         $draws = Draw::query()
-            ->where('organization_id', $user->organization_id)
+            ->where('organization_id', $organizationId)
             ->where('status', Draw::STATUS_ACTIVE)
             ->get();
 

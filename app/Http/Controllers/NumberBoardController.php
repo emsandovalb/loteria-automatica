@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\BranchDailyClosure;
 use App\Models\Customer;
 use App\Models\Draw;
 use App\Models\IntakeRequest;
@@ -12,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class NumberBoardController extends Controller
 {
@@ -40,6 +42,7 @@ class NumberBoardController extends Controller
         $validated = $request->validate([
             'branch_id' => ['nullable', 'integer', Rule::in($visibleBranchIds ?: [-1])],
             'draw_id' => ['nullable', 'integer', Rule::in($draws->pluck('id')->all() ?: [-1])],
+            'draw_date' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
         $selectedBranch = $branches->firstWhere('id', (int) ($validated['branch_id'] ?? 0))
@@ -48,10 +51,15 @@ class NumberBoardController extends Controller
         $selectedDraw = $draws->firstWhere('id', (int) ($validated['draw_id'] ?? 0))
             ?? $draws->first();
 
+        $today = $selectedDraw?->operatingDate() ?? now()->toDateString();
+        $selectedDate = $validated['draw_date'] ?? $today;
+        $selectedDayClosed = $selectedBranch !== null && $this->isDayClosed($selectedBranch, $selectedDate);
+
         $numbers = $this->buildNumberRows(
             organizationId: $organizationId,
             branch: $selectedBranch,
             draw: $selectedDraw,
+            drawDate: $selectedDate,
         );
 
         return view('numbers.index', [
@@ -61,7 +69,10 @@ class NumberBoardController extends Controller
             'selectedDraw' => $selectedDraw,
             'numbers' => $numbers['rows'],
             'summary' => $numbers['summary'],
-            'canCreateManualRequests' => ! $user?->isViewer(),
+            'selectedDate' => $selectedDate,
+            'selectedDayClosed' => $selectedDayClosed,
+            // Manual sales always belong to the current business day.
+            'canCreateManualRequests' => ! $user?->isViewer() && $selectedDate === $today && ! $selectedDayClosed,
         ]);
     }
 
@@ -95,6 +106,13 @@ class NumberBoardController extends Controller
             ->where('status', Draw::STATUS_ACTIVE)
             ->firstOrFail();
         $drawClosed = ! $draw->isOpenForIntake();
+        $drawDate = $draw->operatingDate();
+
+        if ($this->isDayClosed($branch, $drawDate)) {
+            throw ValidationException::withMessages([
+                'number' => __('This branch day is already closed. Manual requests are not allowed.'),
+            ]);
+        }
 
         $customer = null;
 
@@ -133,25 +151,28 @@ class NumberBoardController extends Controller
                 'Draw is closed for intake. Manual review required.',
                 $validated['notes'] ?? null,
             ])));
-            $decision = [
-                'warning' => null,
+            $evaluation = [
+                'final_status' => IntakeRequest::STATUS_NEEDS_REVIEW,
+                'note' => 'Draw is closed for intake. Manual review required.',
+                'reason' => 'draw_closed',
             ];
         } else {
-            $decision = $this->numberLimitService->requestDecisionForAmount(
+            $evaluation = $this->numberLimitService->evaluateRequestForAmount(
                 $user->organization,
                 $branch,
                 $draw,
                 $validated['number'],
                 (float) $validated['amount'],
+                $drawDate,
             );
 
-            $status = $decision['status'];
+            $status = $evaluation['final_status'];
 
-            $notes = match ($decision['reason']) {
-                'blocked', 'manual_review' => $decision['notes'],
+            $notes = match ($evaluation['reason']) {
+                'blocked', 'manual_review' => $evaluation['note'],
                 'over_limit' => trim(implode(' ', array_filter([
                     $validated['notes'] ?? null,
-                    $decision['notes'],
+                    $evaluation['note'],
                 ]))),
                 default => trim((string) ($validated['notes'] ?? '')),
             };
@@ -161,6 +182,7 @@ class NumberBoardController extends Controller
             'organization_id' => $organizationId,
             'branch_id' => $branch->id,
             'draw_id' => $draw->id,
+            'draw_date' => $drawDate,
             'customer_id' => $customer?->id,
             'incoming_message_id' => null,
             'detected_number' => $validated['number'],
@@ -194,14 +216,22 @@ class NumberBoardController extends Controller
                 'draw_id' => $draw->id,
             ])
             ->with('status', $drawClosed
-                ? 'Draw is closed for intake. Manual review required.'
-                : ($decision['warning'] ?? 'Manual request created.'));
+                ? __('Draw is closed for intake. Manual review required.')
+                : __($evaluation['note'] ?? 'Manual request created.'));
+    }
+
+    private function isDayClosed(Branch $branch, string $date): bool
+    {
+        return BranchDailyClosure::query()
+            ->where('branch_id', $branch->id)
+            ->whereDate('closure_date', $date)
+            ->exists();
     }
 
     /**
      * @return array{rows: array<int, array<string, mixed>>, summary: array<string, mixed>}
      */
-    private function buildNumberRows(?int $organizationId, ?Branch $branch, ?Draw $draw): array
+    private function buildNumberRows(?int $organizationId, ?Branch $branch, ?Draw $draw, string $drawDate): array
     {
         if ($organizationId === null || $branch === null || $draw === null) {
             return [
@@ -241,6 +271,7 @@ class NumberBoardController extends Controller
             ->where('organization_id', $organizationId)
             ->where('branch_id', $branch->id)
             ->where('draw_id', $draw->id)
+            ->whereDate('draw_date', $drawDate)
             ->whereIn('status', [
                 IntakeRequest::STATUS_CONFIRMED,
                 IntakeRequest::STATUS_PENDING,

@@ -3,6 +3,9 @@
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\BranchDailyClosureController;
 use App\Http\Controllers\DrawController;
+use App\Http\Controllers\DrawResultController;
+use App\Http\Controllers\PrizePayoutController;
+use App\Http\Controllers\SettlementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncomingMessageController;
 use App\Http\Controllers\IntakeRequestController;
@@ -11,6 +14,7 @@ use App\Http\Controllers\NumberLimitController;
 use App\Http\Controllers\PilotPageController;
 use App\Http\Controllers\SimulatorController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -47,6 +51,15 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{limit}', [NumberLimitController::class, 'destroy'])->name('delete');
     });
 
+    Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+
+    Route::get('/results', [DrawResultController::class, 'index'])->name('results.index');
+    Route::post('/results', [DrawResultController::class, 'store'])->name('results.store');
+    Route::post('/results/{result}/notify', [DrawResultController::class, 'notify'])->name('results.notify');
+    Route::get('/payouts', [PrizePayoutController::class, 'index'])->name('payouts.index');
+    Route::post('/payouts/{payout}/pay', [PrizePayoutController::class, 'pay'])->name('payouts.pay');
+    Route::get('/settlement', [SettlementController::class, 'index'])->name('settlement.index');
+
     Route::prefix('/requests')->name('intake-requests.')->group(function () {
         Route::get('/', [IntakeRequestController::class, 'index'])->name('index');
         Route::get('/{intakeRequest}', [IntakeRequestController::class, 'show'])->name('show');
@@ -54,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/{intakeRequest}', [IntakeRequestController::class, 'update'])->name('update');
         Route::post('/{intakeRequest}/confirm', [IntakeRequestController::class, 'confirm'])->name('confirm');
         Route::post('/{intakeRequest}/reject', [IntakeRequestController::class, 'reject'])->name('reject');
+        Route::post('/{intakeRequest}/clarify', [IntakeRequestController::class, 'clarify'])->name('clarify');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

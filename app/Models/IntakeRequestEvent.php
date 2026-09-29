@@ -15,6 +15,8 @@ class IntakeRequestEvent extends Model
     public const EVENT_CONFIRMED = 'confirmed';
     public const EVENT_REJECTED = 'rejected';
     public const EVENT_STATUS_CHANGED = 'status_changed';
+    public const EVENT_CLARIFICATION_REQUESTED = 'clarification_requested';
+    public const EVENT_CUSTOMER_REPLIED = 'customer_replied';
 
     public $timestamps = false;
 

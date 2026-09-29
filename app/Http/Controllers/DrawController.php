@@ -52,6 +52,8 @@ class DrawController extends Controller
             'cutoff_minutes_before' => ['nullable', 'integer', 'min:0'],
             'is_accepting_requests' => ['nullable', 'boolean'],
             'status' => ['required', Rule::in([Draw::STATUS_ACTIVE, Draw::STATUS_INACTIVE])],
+            'prize_multiplier' => ['nullable', 'numeric', 'min:1', 'max:10000'],
+            'reventado_multiplier' => ['nullable', 'numeric', 'min:1', 'max:10000'],
         ]);
 
         $draw->update([
@@ -63,10 +65,13 @@ class DrawController extends Controller
                 : 0,
             'is_accepting_requests' => $request->boolean('is_accepting_requests'),
             'status' => $validated['status'],
+            // Older forms without these fields keep the current values.
+            'prize_multiplier' => $validated['prize_multiplier'] ?? $draw->prize_multiplier,
+            'reventado_multiplier' => $request->has('reventado_multiplier') ? ($validated['reventado_multiplier'] ?? null) : $draw->reventado_multiplier,
         ]);
 
         return redirect()
             ->route('draws.index')
-            ->with('status', 'Draw updated successfully.');
+            ->with('status', __('Draw updated successfully.'));
     }
 }

@@ -1,8 +1,8 @@
 <x-app-layout>
     <div class="space-y-6">
         <div>
-            <h1 class="text-2xl font-semibold text-slate-900">Pilot Script</h1>
-            <p class="mt-1 text-sm text-slate-600">Sample messages grouped by expected parser result.</p>
+            <h1 class="text-2xl font-semibold text-slate-900">{{ __('Pilot Script') }}</h1>
+            <p class="mt-1 text-sm text-slate-600">{{ __('Sample messages grouped by expected parser result.') }}</p>
         </div>
 
         @php
